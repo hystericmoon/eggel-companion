@@ -1,0 +1,11 @@
+# Large or private probe captures (keep the scripts and small text logs)
+probe/apk/
+probe/bugreport/
+probe/dumpstate2/
+probe/bugreport.zip
+probe/btsnoop_hci.log
+probe/btsnoop_summary.bin
+probe/scan.txt
+
+# Local tooling
+.claude/

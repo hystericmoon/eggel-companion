@@ -1,0 +1,20 @@
+# DD:38:68:82:27:D4 2026-11-04T22:41:49.332
+SERVICE 00001800-0000-1000-8000-00805f9b34fb  (Generic Access Profile)
+  CHAR 00002a00-0000-1000-8000-00805f9b34fb  handle=2  props=write,read  (Device Name)
+    value: 41 63 74 69 76 65 20 33 20 62 6c 65  b'Active 3 ble'
+SERVICE 0000ab00-0000-1000-8000-00805f9b34fb  (Vendor specific)
+  CHAR 0000ab01-0000-1000-8000-00805f9b34fb  handle=5  props=write,read,write-without-response  (Vendor specific)
+    value:   b''
+  CHAR 0000ab02-0000-1000-8000-00805f9b34fb  handle=7  props=notify  (Vendor specific)
+    subscribed
+    DESC 00002902-0000-1000-8000-00805f9b34fb
+  CHAR 0000ab03-0000-1000-8000-00805f9b34fb  handle=10  props=notify  (Vendor specific)
+    subscribed
+    DESC 00002902-0000-1000-8000-00805f9b34fb
+SERVICE 0000fd50-0000-1000-8000-00805f9b34fb  (Vendor specific)
+  CHAR 00000001-0000-1001-8001-00805f9b07d0  handle=14  props=write-without-response  (SDP)
+  CHAR 00000002-0000-1001-8001-00805f9b07d0  handle=16  props=notify  (Unknown)
+    subscribed
+    DESC 00002902-0000-1000-8000-00805f9b34fb
+  CHAR 00000003-0000-1001-8001-00805f9b07d0  handle=19  props=read  (RFCOMM)
+    value:   b''

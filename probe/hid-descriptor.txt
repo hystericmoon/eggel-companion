@@ -1,0 +1,31 @@
+Path: b'\\\\?\\HID#VID_8888&PID_1719&MI_04#8&55cac59&0&0000#{4d1e55b2-f16f-11cf-88cb-001111000030}'
+Descriptor length: 50 bytes
+Raw: 06 00 ff 0a aa 55 a1 01 09 01 15 00 26 ff 00 75 08 96 00 01 81 02 09 01 15 00 26 ff 00 75 08 96 00 01 91 02 09 01 15 00 26 ff 00 75 08 95 08 b1 02 c0
+
+06 00 FF       Usage Page = 0xFF00 (65280)
+0A AA 55       Usage = 0x55AA
+A1 01          Collection
+  09 01          Usage = 0x1
+  15 00          Logical Min = 0x0 (0)
+  26 FF 00       Logical Max = 0xFF (255)
+  75 08          Report Size = 0x8 (8)
+  96 00 01       Report Count = 0x100 (256)
+  81 02          Input (0x02: Data,Var)
+  09 01          Usage = 0x1
+  15 00          Logical Min = 0x0 (0)
+  26 FF 00       Logical Max = 0xFF (255)
+  75 08          Report Size = 0x8 (8)
+  96 00 01       Report Count = 0x100 (256)
+  91 02          Output (0x02: Data,Var)
+  09 01          Usage = 0x1
+  15 00          Logical Min = 0x0 (0)
+  26 FF 00       Logical Max = 0xFF (255)
+  75 08          Report Size = 0x8 (8)
+  95 08          Report Count = 0x8 (8)
+  B1 02          Feature (0x02: Data,Var)
+C0             End Collection
+
+Report sizes (data bytes, excl. ID byte):
+  Feature  report ID 0: 64 bits = 8 bytes
+  Input    report ID 0: 2048 bits = 256 bytes
+  Output   report ID 0: 2048 bits = 256 bytes
