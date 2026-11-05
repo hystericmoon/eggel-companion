@@ -31,6 +31,7 @@ final class MediaChannel {
   private var title = ""
   private var artist = ""
   private var playing = false
+  private var scriptedActive = false
 
   // MediaRemote (private, loaded at run time; may be missing or restricted).
   private typealias InfoFn = @convention(c) (
@@ -109,21 +110,60 @@ final class MediaChannel {
 
   private func refreshNowPlaying() {
     getInfo?(DispatchQueue.main) { [weak self] info in
+      guard let self = self, !self.scriptedActive else { return }
       let d = info as? [String: Any]
-      self?.title = d?["kMRMediaRemoteNowPlayingInfoTitle"] as? String ?? ""
-      self?.artist = d?["kMRMediaRemoteNowPlayingInfoArtist"] as? String ?? ""
+      self.title = d?["kMRMediaRemoteNowPlayingInfoTitle"] as? String ?? ""
+      self.artist = d?["kMRMediaRemoteNowPlayingInfoArtist"] as? String ?? ""
     }
     getPlaying?(DispatchQueue.main) { [weak self] isPlaying in
-      self?.playing = isPlaying
+      guard let self = self, !self.scriptedActive else { return }
+      self.playing = isPlaying
+    }
+    // MediaRemote is restricted on recent macOS; ask Music/Spotify directly.
+    scriptedActive = false
+    if let p = scriptedPlayer() {
+      let sep = "|||"
+      let r = p.run("(player state as text) & \"\(sep)\" & (name of current track) & \"\(sep)\" & (artist of current track)")
+      let parts = r?.components(separatedBy: sep) ?? []
+      if parts.count >= 3 {
+        scriptedActive = true
+        playing = parts[0] == "playing"
+        title = parts[1]
+        artist = parts[2]
+      }
     }
   }
 
-  /// MediaRemote command first; if it is unavailable or refuses, post the
-  /// equivalent media key (16 play/pause, 17 next, 18 previous).
+  // MARK: Music / Spotify through AppleScript
+
+  private struct ScriptedPlayer {
+    let app: String
+    func run(_ body: String) -> String? {
+      let src = "tell application \"\(app)\" to \(body)"
+      var err: NSDictionary?
+      let out = NSAppleScript(source: src)?.executeAndReturnError(&err)
+      return err == nil ? (out?.stringValue ?? "") : nil
+    }
+  }
+
+  /// The running player that is playing, else any running one; nil if none
+  /// (never launches an app).
+  private func scriptedPlayer() -> ScriptedPlayer? {
+    let ids = [("com.spotify.client", "Spotify"), ("com.apple.Music", "Music")]
+    let running = ids.filter {
+      !NSRunningApplication.runningApplications(withBundleIdentifier: $0.0).isEmpty
+    }.map { ScriptedPlayer(app: $0.1) }
+    return running.first { $0.run("player state as text") == "playing" } ?? running.first
+  }
+
+  /// Music/Spotify get the command directly (works in the sandbox with the
+  /// Apple-events entitlement). Anything else gets a media key, because
+  /// MediaRemote's SendCommand returns true yet does nothing on recent macOS.
   private func send(command: UInt32, key: Int) {
-    // MediaRemote's SendCommand can return true yet do nothing on recent
-    // macOS (seen on 27.2), so its result cannot be trusted. Always use the
-    // media key, which needs Accessibility/Input Monitoring permission.
+    if let p = scriptedPlayer() {
+      let verbs: [UInt32: String] = [0: "play", 1: "pause", 4: "next track", 5: "previous track"]
+      if let verb = verbs[command], p.run(verb) != nil { return }
+    }
     postMediaKey(key)
   }
 

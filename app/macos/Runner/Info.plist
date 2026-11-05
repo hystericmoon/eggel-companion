@@ -26,6 +26,8 @@
 	<string>$(PRODUCT_COPYRIGHT)</string>
 	<key>NSMainNibFile</key>
 	<string>MainMenu</string>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>Eggel Companion reads and controls Music and Spotify playback.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 </dict>
