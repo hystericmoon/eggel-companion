@@ -9,3 +9,7 @@ probe/scan.txt
 
 # Local tooling
 .claude/
+
+# Python
+__pycache__/
+*.pyc
