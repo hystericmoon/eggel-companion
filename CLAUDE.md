@@ -31,6 +31,14 @@ The official Eggel app is iPhone-only and closed source, so this is a new app, n
 - Owner note: even the lowest volume step is very loud on every device and app (owner works around it with the browser/YouTube volume at minimum). A finer slider cannot go below the speaker's lowest hardware step; the real fix would be digital attenuation (per-app session volume via ISimpleAudioVolume on Windows). Not built.
 - Probe scripts in probe/: probe_hid.py, probe_ble.py (read-only), probe_ab_write.py (guarded, dry run by default).
 
+## Resume here (2026-11-05)
+- Repo: https://github.com/hystericmoon/eggel-companion (made public by the owner; contains the speaker serial and BLE address). gh is installed and logged in as hystericmoon. Latest pushed: 3c534f8 (2026-11-05).
+- CI: build.yml passes on both Windows and macOS (run 41971190824 on 82b97ff).
+- macOS backend (2026-11-05): `MediaChannel` in app/macos/Runner/MainFlutterWindow.swift (kept in that file to avoid editing the Xcode project). CoreAudio default-output volume ('vmvc'), private MediaRemote for now-playing and transport, media-key events as fallback; `main.dart` uses `ChannelSpeaker` on macOS. Compiles in CI but NOT yet run on a Mac. MediaRemote may be blocked on macOS 15.4+ (title/artist would stay empty).
+- docs/protocol.md exists: findings and open questions only, no decoded commands.
+- Open items: (1) owner's quiet-end test with the Eggel as Windows default output; (2) per-app volume "extra quiet" mode, only if (1) shows it's needed; (3) decide the Tuya cloud-key route for EQ/rename/TWS/battery (needs the owner to create a Tuya cloud account), else stay a media and volume controller; (4) owner to test the macOS build on their Mac (any output works; only the speaker name needs the Eggel): volume, play/pause/skip, title/artist.
+- Shell setup for builds: PATH needs C:\dev\flutter\bin and "C:\Program Files\GitHub CLI"; set JAVA_HOME=C:\dev\jdk17 and ANDROID_HOME=C:\dev\android-sdk. Phone adb serial RRCX5049JQF; the app installs as com.eggelcompanion.eggel_companion.
+
 ## Decisions so far
 - Framework: Flutter (one codebase for Android, Windows and macOS)
 - BLE plugin: a cross-platform one that covers Android, Windows and macOS (evaluate `universal_ble`)
