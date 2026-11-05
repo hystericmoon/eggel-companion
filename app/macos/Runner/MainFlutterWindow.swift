@@ -121,7 +121,9 @@ final class MediaChannel {
   /// MediaRemote command first; if it is unavailable or refuses, post the
   /// equivalent media key (16 play/pause, 17 next, 18 previous).
   private func send(command: UInt32, key: Int) {
-    if let send = sendCommand, send(command, nil) { return }
+    // MediaRemote's SendCommand can return true yet do nothing on recent
+    // macOS (seen on 27.2), so its result cannot be trusted. Always use the
+    // media key, which needs Accessibility/Input Monitoring permission.
     postMediaKey(key)
   }
 
