@@ -8,12 +8,12 @@ import 'speaker/speaker.dart';
 import 'ui/home_page.dart';
 
 void main() {
-  // Android and Windows have a real backend; macOS still uses the fake one.
+  // Android, Windows and macOS share the native "eggel/media" channel.
   // Windows gets a cubic slider so the quiet end has many small steps.
-  final Speaker speaker = Platform.isAndroid
-      ? ChannelSpeaker()
-      : Platform.isWindows
+  final Speaker speaker = Platform.isWindows
       ? ChannelSpeaker(volumeExponent: 3)
+      : (Platform.isAndroid || Platform.isMacOS)
+      ? ChannelSpeaker()
       : FakeSpeaker();
   runApp(EggelApp(speaker: speaker));
 }
