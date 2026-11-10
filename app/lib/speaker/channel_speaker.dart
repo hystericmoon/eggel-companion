@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 
 import 'speaker.dart';
+import 'volume_floor.dart';
 
 /// Real backend for Android and Windows: both implement the same native
 /// "eggel/media" channel (media session + system volume).
@@ -27,11 +28,12 @@ class ChannelSpeaker implements Speaker {
   SpeakerState _state = const SpeakerState();
   Timer? _timer;
 
-  // Last known volume on the current output, and that output's name. When the
-  // default output changes (USB <-> Bluetooth), the old level is applied to
-  // the new output so switching doesn't change the volume number.
+  // Last shown volume (see volume_floor.dart) and the output's name. When the
+  // default output changes (USB <-> Bluetooth), the same shown level is applied
+  // to the new output, so the number and the quietness stay the same.
   double? _carry;
   String? _lastName;
+  double _floor = 0;
 
   @override
   SpeakerState get state => _state;
@@ -51,14 +53,18 @@ class ChannelSpeaker implements Speaker {
       if (m == null) return;
       final name = (m['name'] as String?) ?? '';
       final connected = m['connected'] as bool? ?? false;
-      var volume = (m['volume'] as num?)?.toDouble() ?? 0;
+      final floor = audibleFloorFor(name);
+      var volume = deviceToShown((m['volume'] as num?)?.toDouble() ?? 0, floor);
       if (connected) {
         final carry = _carry;
         if (_lastName != null && name != _lastName && carry != null) {
           volume = carry;
-          await _channel.invokeMethod<void>('setVolume', {'volume': carry});
+          await _channel.invokeMethod<void>('setVolume', {
+            'volume': shownToDevice(carry, floor),
+          });
         }
         _lastName = name;
+        _floor = floor;
         _carry = volume;
       }
       _set(
@@ -100,7 +106,9 @@ class ChannelSpeaker implements Speaker {
     final v = volume.clamp(0.0, 100.0);
     _carry = v;
     _set(_state.copyWith(volume: v)); // keep the slider smooth
-    await _channel.invokeMethod<void>('setVolume', {'volume': v});
+    await _channel.invokeMethod<void>('setVolume', {
+      'volume': shownToDevice(v, _floor),
+    });
   }
 
   @override
