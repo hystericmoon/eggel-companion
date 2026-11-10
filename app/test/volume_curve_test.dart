@@ -30,4 +30,14 @@ void main() {
     expect(formatPercent(9.94), '9.9');
     expect(formatPercent(35.4), '35');
   });
+
+  test('stepPercent uses fine steps below 10% and whole steps above', () {
+    expect(stepPercent(5, up: true), 5.5);
+    expect(stepPercent(5, up: false), 4.5);
+    expect(stepPercent(10, up: true), 11);
+    expect(stepPercent(10, up: false), 9.5);
+    expect(stepPercent(50, up: true), 51);
+    expect(stepPercent(0, up: false), 0);
+    expect(stepPercent(100, up: true), 100);
+  });
 }

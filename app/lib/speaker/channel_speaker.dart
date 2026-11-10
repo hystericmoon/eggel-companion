@@ -27,6 +27,12 @@ class ChannelSpeaker implements Speaker {
   SpeakerState _state = const SpeakerState();
   Timer? _timer;
 
+  // Last known volume on the current output, and that output's name. When the
+  // default output changes (USB <-> Bluetooth), the old level is applied to
+  // the new output so switching doesn't change the volume number.
+  double? _carry;
+  String? _lastName;
+
   @override
   SpeakerState get state => _state;
 
@@ -44,12 +50,23 @@ class ChannelSpeaker implements Speaker {
       final m = await _channel.invokeMapMethod<String, dynamic>('getState');
       if (m == null) return;
       final name = (m['name'] as String?) ?? '';
+      final connected = m['connected'] as bool? ?? false;
+      var volume = (m['volume'] as num?)?.toDouble() ?? 0;
+      if (connected) {
+        final carry = _carry;
+        if (_lastName != null && name != _lastName && carry != null) {
+          volume = carry;
+          await _channel.invokeMethod<void>('setVolume', {'volume': carry});
+        }
+        _lastName = name;
+        _carry = volume;
+      }
       _set(
         SpeakerState(
-          connected: m['connected'] as bool? ?? false,
+          connected: connected,
           name: name.isEmpty ? 'Bluetooth speaker' : name,
           playing: m['playing'] as bool? ?? false,
-          volume: (m['volume'] as num?)?.toDouble() ?? 0,
+          volume: volume,
           title: m['title'] as String? ?? '',
           artist: m['artist'] as String? ?? '',
           mediaAccess: m['mediaAccess'] as bool? ?? false,
@@ -81,6 +98,7 @@ class ChannelSpeaker implements Speaker {
   @override
   Future<void> setVolume(double volume) async {
     final v = volume.clamp(0.0, 100.0);
+    _carry = v;
     _set(_state.copyWith(volume: v)); // keep the slider smooth
     await _channel.invokeMethod<void>('setVolume', {'volume': v});
   }

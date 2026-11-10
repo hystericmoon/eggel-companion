@@ -145,6 +145,40 @@ class HomePage extends StatelessWidget {
                             ),
                           ],
                         ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            IconButton.outlined(
+                              key: const Key('volume-down'),
+                              tooltip: 'Volume down',
+                              onPressed: s.connected
+                                  ? () => speaker.setVolume(
+                                      stepPercent(s.volume, up: false),
+                                    )
+                                  : null,
+                              icon: const Icon(Icons.remove),
+                            ),
+                            SizedBox(
+                              width: 96,
+                              child: Text(
+                                '${formatPercent(s.volume)}%',
+                                key: const Key('volume-readout'),
+                                textAlign: TextAlign.center,
+                                style: theme.textTheme.titleLarge,
+                              ),
+                            ),
+                            IconButton.outlined(
+                              key: const Key('volume-up'),
+                              tooltip: 'Volume up',
+                              onPressed: s.connected
+                                  ? () => speaker.setVolume(
+                                      stepPercent(s.volume, up: true),
+                                    )
+                                  : null,
+                              icon: const Icon(Icons.add),
+                            ),
+                          ],
+                        ),
                         const SizedBox(height: 24),
                         Text(
                           'EQ, rename and TWS arrive once the speaker protocol is known.',
