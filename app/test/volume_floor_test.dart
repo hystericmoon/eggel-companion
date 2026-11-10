@@ -20,7 +20,12 @@ void main() {
     }
   });
 
-  test('1 shown is just above the floor', () {
-    expect(shownToDevice(1, 5.5), closeTo(6.445, 1e-9));
+  test('steps are geometric: 5 is only slightly above 1', () {
+    // USB floor 0.5%: shown 1 ~0.52%, shown 5 ~0.65%, shown 50 ~7%.
+    expect(shownToDevice(1, 0.5), closeTo(0.5 * 1.0546, 0.01));
+    expect(shownToDevice(5, 0.5), lessThan(0.7));
+    expect(shownToDevice(50, 0.5), closeTo(7.07, 0.05));
+    // Bluetooth floor 5.5%: shown 5 is below 7%.
+    expect(shownToDevice(5, 5.5), lessThan(7));
   });
 }

@@ -9,9 +9,10 @@ import 'ui/home_page.dart';
 
 void main() {
   // Android, Windows and macOS share the native "eggel/media" channel.
-  // Windows gets a cubic slider so the quiet end has many small steps.
+  // The shown volume is geometric per output (volume_floor.dart), so the
+  // slider itself is linear.
   final Speaker speaker = Platform.isWindows
-      ? ChannelSpeaker(volumeExponent: 3)
+      ? ChannelSpeaker()
       : (Platform.isAndroid || Platform.isMacOS)
       ? ChannelSpeaker()
       : FakeSpeaker();
