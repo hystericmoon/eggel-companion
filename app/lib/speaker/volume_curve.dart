@@ -16,12 +16,13 @@ double percentToSlider(double percent, double exponent) =>
 String formatPercent(double percent) =>
     percent < 10 ? percent.toStringAsFixed(1) : percent.round().toString();
 
-/// One stepper press: 0.5 points below 10%, 1 point above, so the quiet end
-/// keeps fine control. Result is clamped to 0..100.
+/// One stepper press: moves to the next multiple of 5 (0, 5, 10 ... 100).
+/// From an in-between value such as 7 it goes to 10 (up) or 5 (down).
 double stepPercent(double current, {required bool up}) {
-  final below = up ? current < 10 : current <= 10;
-  final step = below ? 0.5 : 1.0;
-  final next = current + (up ? step : -step);
-  // Snap to the step grid so repeated presses don't accumulate drift.
-  return ((next / step).round() * step).clamp(0.0, 100.0).toDouble();
+  const step = 5.0;
+  final eps = 1e-9;
+  final next = up
+      ? ((current + eps) / step).floor() * step + step
+      : ((current - eps) / step).ceil() * step - step;
+  return next.clamp(0.0, 100.0).toDouble();
 }
