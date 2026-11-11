@@ -48,6 +48,7 @@ class ChannelSpeaker implements Speaker {
   }
 
   Future<void> _refresh() async {
+    final gen = _volumeGen;
     try {
       final m = await _channel.invokeMapMethod<String, dynamic>('getState');
       if (m == null) return;
@@ -61,6 +62,15 @@ class ChannelSpeaker implements Speaker {
         sessionMin,
         floor,
       );
+      // Drop a poll that started before our latest volume change, and keep
+      // our own value when the read-back is only rounding noise; otherwise
+      // the + button steps from a slightly-off value and lands on the same
+      // step again.
+      if (gen != _volumeGen) return;
+      final own = _carry;
+      if (connected && own != null && (volume - own).abs() < 1.5) {
+        volume = own;
+      }
       if (connected) {
         final carry = _carry;
         if (_lastName != null && name != _lastName && carry != null) {
@@ -112,11 +122,13 @@ class ChannelSpeaker implements Speaker {
   Future<void> setVolume(double volume) async {
     final v = volume.clamp(0.0, 100.0);
     _carry = v;
+    _volumeGen++;
     _set(_state.copyWith(volume: v)); // keep the slider smooth
     await _apply(v, _floor);
   }
 
   double _wantScale = 1;
+  int _volumeGen = 0;
 
   Future<void> _apply(double shown, double floor) async {
     final plan = planVolume(shown, floor);
