@@ -54,14 +54,21 @@ class ChannelSpeaker implements Speaker {
       final name = (m['name'] as String?) ?? '';
       final connected = m['connected'] as bool? ?? false;
       final floor = audibleFloorFor(name);
-      var volume = deviceToShown((m['volume'] as num?)?.toDouble() ?? 0, floor);
+      final sessionMin = (m['sessionMin'] as num?)?.toDouble() ?? 1;
+      final sessionMax = (m['sessionMax'] as num?)?.toDouble() ?? 1;
+      var volume = shownFromDevice(
+        (m['volume'] as num?)?.toDouble() ?? 0,
+        sessionMin,
+        floor,
+      );
       if (connected) {
         final carry = _carry;
         if (_lastName != null && name != _lastName && carry != null) {
           volume = carry;
-          await _channel.invokeMethod<void>('setVolume', {
-            'volume': shownToDevice(carry, floor),
-          });
+          await _apply(carry, floor);
+        } else if (_wantScale < 1 && sessionMax > _wantScale + 1e-3) {
+          // An app started after we attenuated: bring it down too.
+          await _apply(_carry ?? volume, floor);
         }
         _lastName = name;
         _floor = floor;
@@ -106,8 +113,17 @@ class ChannelSpeaker implements Speaker {
     final v = volume.clamp(0.0, 100.0);
     _carry = v;
     _set(_state.copyWith(volume: v)); // keep the slider smooth
+    await _apply(v, _floor);
+  }
+
+  double _wantScale = 1;
+
+  Future<void> _apply(double shown, double floor) async {
+    final plan = planVolume(shown, floor);
+    _wantScale = plan.scale;
     await _channel.invokeMethod<void>('setVolume', {
-      'volume': shownToDevice(v, _floor),
+      'volume': plan.endpoint,
+      'sessionScale': plan.scale,
     });
   }
 

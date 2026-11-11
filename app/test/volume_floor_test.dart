@@ -28,4 +28,27 @@ void main() {
     // Bluetooth floor 5.5%: shown 5 is below 7%.
     expect(shownToDevice(5, 5.5), lessThan(7));
   });
+
+  test('planVolume attenuates per app below the Bluetooth floor', () {
+    expect(planVolume(0, 5.5).endpoint, 0);
+    final low = planVolume(1, 5.5);
+    expect(low.endpoint, 5.5);
+    expect(low.scale, lessThan(0.15));
+    final high = planVolume(100, 5.5);
+    expect(high.endpoint, 100);
+    expect(high.scale, 1);
+    // USB floor equals the quietest level: no attenuation.
+    expect(planVolume(1, 0.5).scale, 1);
+    // Unknown outputs stay linear.
+    expect(planVolume(40, 0).endpoint, 40);
+  });
+
+  test('shownFromDevice inverts planVolume', () {
+    for (final f in [0.5, 5.5]) {
+      for (final v in [1.0, 5.0, 30.0, 80.0, 100.0]) {
+        final p = planVolume(v, f);
+        expect(shownFromDevice(p.endpoint, p.scale, f), closeTo(v, 1e-6));
+      }
+    }
+  });
 }

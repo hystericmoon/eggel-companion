@@ -5,6 +5,7 @@
 #include <windows.h>
 #include <propkeydef.h>
 #include <propsys.h>
+#include <audiopolicy.h>
 #include <endpointvolume.h>
 #include <functiondiscoverykeys_devpkey.h>
 #include <mmdeviceapi.h>
@@ -131,6 +132,8 @@ struct Output {
   std::string name;
   double percent = 0;  // 0..100, full precision
   UINT steps = 0;      // how many hardware steps the endpoint exposes
+  double session_min = 1;  // lowest per-app volume (0..1) among other apps
+  double session_max = 1;  // highest; differs from min when a new app started
 };
 
 winrt::com_ptr<IAudioEndpointVolume> OpenEndpoint(std::string* name) {
@@ -164,6 +167,74 @@ winrt::com_ptr<IAudioEndpointVolume> OpenEndpoint(std::string* name) {
   return endpoint;
 }
 
+// Per-app ("session") volume on the default output, for every app but this
+// one. This is how we go quieter than the output's lowest hardware step.
+winrt::com_ptr<IAudioSessionEnumerator> OpenSessions() {
+  winrt::com_ptr<IMMDeviceEnumerator> enumerator;
+  if (FAILED(CoCreateInstance(__uuidof(MMDeviceEnumerator), nullptr, CLSCTX_ALL,
+                              IID_PPV_ARGS(enumerator.put())))) {
+    return nullptr;
+  }
+  winrt::com_ptr<IMMDevice> device;
+  if (FAILED(enumerator->GetDefaultAudioEndpoint(eRender, eMultimedia,
+                                                 device.put()))) {
+    return nullptr;
+  }
+  winrt::com_ptr<IAudioSessionManager2> manager;
+  if (FAILED(device->Activate(__uuidof(IAudioSessionManager2), CLSCTX_ALL,
+                              nullptr, manager.put_void()))) {
+    return nullptr;
+  }
+  winrt::com_ptr<IAudioSessionEnumerator> sessions;
+  if (FAILED(manager->GetSessionEnumerator(sessions.put()))) return nullptr;
+  return sessions;
+}
+
+// Calls fn(ISimpleAudioVolume&) for each other app's session.
+template <typename Fn>
+void ForEachSession(Fn fn) {
+  auto sessions = OpenSessions();
+  if (!sessions) return;
+  int count = 0;
+  if (FAILED(sessions->GetCount(&count))) return;
+  for (int i = 0; i < count; ++i) {
+    winrt::com_ptr<IAudioSessionControl> control;
+    if (FAILED(sessions->GetSession(i, control.put()))) continue;
+    auto control2 = control.try_as<IAudioSessionControl2>();
+    if (!control2) continue;
+    DWORD pid = 0;
+    control2->GetProcessId(&pid);
+    if (pid == GetCurrentProcessId()) continue;
+    if (control2->IsSystemSoundsSession() == S_OK) continue;
+    auto volume = control.try_as<ISimpleAudioVolume>();
+    if (volume) fn(*volume);
+  }
+}
+
+void ReadSessionScale(double* lo, double* hi) {
+  *lo = 1;
+  *hi = 1;
+  bool first = true;
+  ForEachSession([&](ISimpleAudioVolume& v) {
+    float scalar = 1;
+    if (FAILED(v.GetMasterVolume(&scalar))) return;
+    if (first) {
+      *lo = *hi = scalar;
+      first = false;
+    } else {
+      *lo = std::min<double>(*lo, scalar);
+      *hi = std::max<double>(*hi, scalar);
+    }
+  });
+}
+
+void WriteSessionScale(double scale) {
+  const float s = static_cast<float>(std::clamp(scale, 0.0, 1.0));
+  ForEachSession([&](ISimpleAudioVolume& v) {
+    v.SetMasterVolume(s, nullptr);
+  });
+}
+
 Output ReadOutput() {
   Output out;
   auto endpoint = OpenEndpoint(&out.name);
@@ -175,6 +246,7 @@ Output ReadOutput() {
   BOOL muted = FALSE;
   endpoint->GetMute(&muted);
   out.percent = muted ? 0.0 : static_cast<double>(scalar) * 100.0;
+  ReadSessionScale(&out.session_min, &out.session_max);
   out.ok = true;
   return out;
 }
@@ -211,6 +283,10 @@ void RegisterMediaChannel(flutter::BinaryMessenger* messenger) {
           map[flutter::EncodableValue("volume")] = flutter::EncodableValue(out.percent);
           map[flutter::EncodableValue("steps")] =
               flutter::EncodableValue(static_cast<int>(out.steps));
+          map[flutter::EncodableValue("sessionMin")] =
+              flutter::EncodableValue(out.session_min);
+          map[flutter::EncodableValue("sessionMax")] =
+              flutter::EncodableValue(out.session_max);
           map[flutter::EncodableValue("playing")] = flutter::EncodableValue(snap.playing);
           map[flutter::EncodableValue("title")] = flutter::EncodableValue(snap.title);
           map[flutter::EncodableValue("artist")] = flutter::EncodableValue(snap.artist);
@@ -230,14 +306,21 @@ void RegisterMediaChannel(flutter::BinaryMessenger* messenger) {
           result->Success();
         } else if (m == "setVolume") {
           double pct = 0;
+          double scale = 1;
           if (const auto* args = std::get_if<flutter::EncodableMap>(call.arguments())) {
             auto it = args->find(flutter::EncodableValue("volume"));
             if (it != args->end()) {
               if (const auto* d = std::get_if<double>(&it->second)) pct = *d;
               if (const auto* i = std::get_if<int32_t>(&it->second)) pct = *i;
             }
+            auto sc = args->find(flutter::EncodableValue("sessionScale"));
+            if (sc != args->end()) {
+              if (const auto* d = std::get_if<double>(&sc->second)) scale = *d;
+              if (const auto* i = std::get_if<int32_t>(&sc->second)) scale = *i;
+            }
           }
           WriteVolume(pct);
+          WriteSessionScale(scale);
           result->Success();
         } else {
           result->NotImplemented();
