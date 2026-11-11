@@ -17,10 +17,17 @@ double audibleFloorFor(String outputName) {
 
 /// Device percent -> shown percent. At or below the floor it is silent: 0.
 /// Outputs with no floor (0) stay linear.
+/// Bends the geometric scale so the middle is louder: a pure geometric scale put
+/// shown 40 at about 4%, barely above the Bluetooth floor (owner heard almost
+/// nothing at 40, 2026-11-11). Lower = louder middle; 1 = pure geometric.
+/// Tune by ear.
+const double kShape = 0.55;
+
 double deviceToShown(double device, double floor) {
   if (device <= floor) return 0;
   if (floor <= 0) return device.clamp(0.0, 100.0).toDouble();
-  return (100 * log(device / floor) / log(100 / floor)).clamp(0.0, 100.0);
+  final f = log(device / floor) / log(100 / floor); // 0..1 along the geometric span
+  return (100 * pow(f.clamp(0.0, 1.0), 1 / kShape)).clamp(0.0, 100.0).toDouble();
 }
 
 /// Shown percent -> device percent. 0 stays silent; anything above it starts
@@ -29,7 +36,9 @@ double shownToDevice(double shown, double floor) {
   if (shown <= 0) return 0;
   final s = shown.clamp(0.0, 100.0);
   if (floor <= 0) return s.toDouble();
-  return (floor * pow(100 / floor, s / 100)).clamp(0.0, 100.0).toDouble();
+  return (floor * pow(100 / floor, pow(s / 100, kShape)))
+      .clamp(0.0, 100.0)
+      .toDouble();
 }
 
 /// The quietest audible level, as an "effective" system percent. Every output

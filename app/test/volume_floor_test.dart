@@ -20,13 +20,21 @@ void main() {
     }
   });
 
-  test('steps are geometric: 5 is only slightly above 1', () {
-    // USB floor 0.5%: shown 1 ~0.52%, shown 5 ~0.65%, shown 50 ~7%.
-    expect(shownToDevice(1, 0.5), closeTo(0.5 * 1.0546, 0.01));
-    expect(shownToDevice(5, 0.5), lessThan(0.7));
-    expect(shownToDevice(50, 0.5), closeTo(7.07, 0.05));
-    // Bluetooth floor 5.5%: shown 5 is below 7%.
-    expect(shownToDevice(5, 5.5), lessThan(7));
+  test('the middle of the scale is clearly audible', () {
+    // USB floor 0.5%: shown 1 ~0.76%, shown 5 ~1.4%, shown 40 ~12%, 50 ~19%.
+    expect(shownToDevice(1, 0.5), closeTo(0.76, 0.05));
+    expect(shownToDevice(5, 0.5), closeTo(1.39, 0.08));
+    expect(shownToDevice(40, 0.5), greaterThan(10));
+    expect(shownToDevice(50, 0.5), closeTo(18.6, 0.6));
+    // Bluetooth floor 5.5%: shown 5 is ~9.6%.
+    expect(shownToDevice(5, 5.5), closeTo(9.6, 0.5));
+    // Rises steadily.
+    var last = 0.0;
+    for (var v = 1; v <= 100; v++) {
+      final d = shownToDevice(v.toDouble(), 0.5);
+      expect(d, greaterThan(last));
+      last = d;
+    }
   });
 
   test('planVolume attenuates per app below the Bluetooth floor', () {

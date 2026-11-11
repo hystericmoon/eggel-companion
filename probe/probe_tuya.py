@@ -128,6 +128,7 @@ class Session:
 
     def on_notify(self, _char, data):
         data = bytes(data)
+        log(f"raw notify {data.hex()}")
         n, pos = unpack_int(data, 0)
         if n == 0:
             self.buf = bytearray()
@@ -184,9 +185,11 @@ async def main():
     s = Session(env)
     async with BleakClient(dev) as client:
         await client.start_notify(NOTIFY, s.on_notify)
+        await asyncio.sleep(1.5)
 
         async def send(code, data=b""):
             for p in s.build(code, data):
+                log(f"write {p.hex()}")
                 await client.write_gatt_char(WRITE, p, response=False)
 
         async def expect(timeout=8):
