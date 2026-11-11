@@ -5,25 +5,28 @@ import 'package:flutter/material.dart';
 import 'speaker/channel_speaker.dart';
 import 'speaker/fake_speaker.dart';
 import 'speaker/speaker.dart';
-import 'ui/home_page.dart';
+import 'tools/tools_controller.dart';
+import 'ui/shell.dart';
 import 'ui/theme/palette.dart';
 
 void main() {
   // Android, Windows and macOS share the native "eggel/media" channel.
   // The shown volume is geometric per output (volume_floor.dart), so the
   // slider itself is linear.
-  final Speaker speaker = Platform.isWindows
+  final Speaker inner = Platform.isWindows
       ? ChannelSpeaker()
       : (Platform.isAndroid || Platform.isMacOS)
       ? ChannelSpeaker()
       : FakeSpeaker();
-  runApp(EggelApp(speaker: speaker));
+  final tools = ToolsController(inner);
+  runApp(EggelApp(speaker: CappedSpeaker(inner, tools), tools: tools));
 }
 
 class EggelApp extends StatefulWidget {
-  const EggelApp({super.key, required this.speaker});
+  const EggelApp({super.key, required this.speaker, required this.tools});
 
   final Speaker speaker;
+  final ToolsController tools;
 
   @override
   State<EggelApp> createState() => _EggelAppState();
@@ -52,7 +55,11 @@ class _EggelAppState extends State<EggelApp> {
           scaffoldBackgroundColor: eggelBackground,
           useMaterial3: true,
         ),
-        home: HomePage(speaker: widget.speaker, theme: _theme),
+        home: AppShell(
+          speaker: widget.speaker,
+          theme: _theme,
+          tools: widget.tools,
+        ),
       ),
     );
   }
