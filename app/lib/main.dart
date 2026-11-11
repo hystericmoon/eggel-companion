@@ -18,7 +18,7 @@ void main() {
       : (Platform.isAndroid || Platform.isMacOS)
       ? ChannelSpeaker()
       : FakeSpeaker();
-  final tools = ToolsController(inner);
+  final tools = ToolsController(inner)..startClock();
   runApp(EggelApp(speaker: CappedSpeaker(inner, tools), tools: tools));
 }
 

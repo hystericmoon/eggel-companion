@@ -185,6 +185,11 @@ async def main():
     s = Session(env)
     async with BleakClient(dev) as client:
         await client.start_notify(NOTIFY, s.on_notify)
+        for extra in ("0000ab02-0000-1000-8000-00805f9b34fb", "0000ab03-0000-1000-8000-00805f9b34fb"):
+            try:
+                await client.start_notify(extra, lambda c, d, e=extra: log(f"AB notify {e[4:8]} {bytes(d).hex()}"))
+            except Exception as ex:
+                log(f"could not subscribe {extra[4:8]}: {ex}")
         await asyncio.sleep(1.5)
 
         async def send(code, data=b""):

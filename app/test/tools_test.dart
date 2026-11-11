@@ -52,6 +52,90 @@ void main() {
     t.dispose();
   });
 
+  test('alarm plays once at its time and then turns itself off', () {
+    var now = DateTime(2026, 1, 5, 6, 59); // a Monday
+    final s = FakeSpeaker(initial: const SpeakerState(connected: true));
+    final t = ToolsController(s, now: () => now);
+    t.configure(() {
+      t.alarmOn = true;
+      t.alarmMinutes = 7 * 60;
+      t.alarmVolume = 25;
+    });
+    t.checkSchedules();
+    expect(s.calls, isEmpty);
+    now = DateTime(2026, 1, 5, 7, 0);
+    t.checkSchedules();
+    t.checkSchedules();
+    expect(s.calls, ['volume:25.0', 'play']);
+    expect(s.state.volume, 25);
+    expect(t.alarmOn, isFalse);
+    t.dispose();
+  });
+
+  test('repeating alarm skips days that are not picked', () {
+    var now = DateTime(2026, 1, 6, 7, 0); // Tuesday
+    final s = FakeSpeaker(initial: const SpeakerState(connected: true));
+    final t = ToolsController(s, now: () => now);
+    t.configure(() {
+      t.alarmOn = true;
+      t.alarmDays.add(DateTime.monday);
+    });
+    expect(s.calls, isEmpty);
+    now = DateTime(2026, 1, 12, 7, 0); // next Monday
+    t.checkSchedules();
+    expect(s.calls, ['volume:30.0', 'play']);
+    expect(t.alarmOn, isTrue);
+    t.dispose();
+  });
+
+  test('night schedule caps volume across midnight', () {
+    var now = DateTime(2026, 1, 5, 21, 0);
+    final s = FakeSpeaker(
+      initial: const SpeakerState(connected: true, volume: 60),
+    );
+    final t = ToolsController(s, now: () => now);
+    t.configure(() {
+      t.nightOn = true;
+      t.nightCap = 30;
+    });
+    expect(t.nightActive, isFalse);
+    expect(t.effectiveCap, isNull);
+    now = DateTime(2026, 1, 5, 23, 30);
+    t.checkSchedules();
+    expect(t.nightActive, isTrue);
+    expect(t.effectiveCap, 30);
+    expect(s.state.volume, 30);
+    now = DateTime(2026, 1, 6, 6, 0);
+    expect(t.nightActive, isTrue);
+    now = DateTime(2026, 1, 6, 8, 0);
+    expect(t.nightActive, isFalse);
+    t.dispose();
+  });
+
+  testWidgets('wide windows show a sidebar and it switches pages', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1200, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final inner = FakeSpeaker();
+    final tools = ToolsController(inner);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: AppShell(
+          speaker: CappedSpeaker(inner, tools),
+          theme: ThemeController(),
+          tools: tools,
+        ),
+      ),
+    );
+    expect(find.byKey(const Key('sidebar')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('tab-tools')));
+    await tester.pump();
+    expect(find.byKey(const Key('alarm-switch')), findsOneWidget);
+    tools.dispose();
+  });
+
   testWidgets('tabs switch pages and the sleep timer starts from Tools', (
     tester,
   ) async {
