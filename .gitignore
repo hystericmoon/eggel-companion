@@ -13,3 +13,7 @@ probe/scan.txt
 # Python
 __pycache__/
 *.pyc
+
+# Tuya cloud credentials (never commit)
+probe/tuya.env
+probe/tuya-log.txt

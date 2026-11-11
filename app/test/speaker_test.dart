@@ -1,6 +1,7 @@
 import 'package:eggel_companion/speaker/fake_speaker.dart';
 import 'package:eggel_companion/speaker/speaker.dart';
 import 'package:eggel_companion/ui/home_page.dart';
+import 'package:eggel_companion/ui/theme/palette.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -61,6 +62,30 @@ void main() {
       await tester.tap(find.byTooltip('Play'));
       await tester.pump();
       expect(s.calls, isEmpty);
+    });
+  });
+
+  group('Theme picker', () {
+    testWidgets('choosing a color changes the palette', (tester) async {
+      final s = FakeSpeaker();
+      final theme = ThemeController();
+      await tester.pumpWidget(
+        MaterialApp(home: HomePage(speaker: s, theme: theme)),
+      );
+      expect(theme.palette.name, 'Ember');
+      await tester.ensureVisible(find.byKey(const Key('theme-aqua')));
+      await tester.tap(find.byKey(const Key('theme-aqua')));
+      await tester.pump();
+      expect(theme.palette.name, 'Aqua');
+    });
+
+    testWidgets('volume buttons step the speaker volume', (tester) async {
+      final s = FakeSpeaker();
+      await tester.pumpWidget(MaterialApp(home: HomePage(speaker: s)));
+      final before = s.state.volume;
+      await tester.tap(find.byKey(const Key('volume-up')));
+      await tester.pump();
+      expect(s.state.volume, greaterThan(before));
     });
   });
 }

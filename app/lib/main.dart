@@ -6,6 +6,7 @@ import 'speaker/channel_speaker.dart';
 import 'speaker/fake_speaker.dart';
 import 'speaker/speaker.dart';
 import 'ui/home_page.dart';
+import 'ui/theme/palette.dart';
 
 void main() {
   // Android, Windows and macOS share the native "eggel/media" channel.
@@ -19,25 +20,40 @@ void main() {
   runApp(EggelApp(speaker: speaker));
 }
 
-class EggelApp extends StatelessWidget {
+class EggelApp extends StatefulWidget {
   const EggelApp({super.key, required this.speaker});
 
   final Speaker speaker;
 
   @override
+  State<EggelApp> createState() => _EggelAppState();
+}
+
+class _EggelAppState extends State<EggelApp> {
+  final ThemeController _theme = ThemeController();
+
+  @override
+  void dispose() {
+    _theme.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Eggel Companion',
-      theme: ThemeData(
-        colorSchemeSeed: const Color(0xFF6C5CFF),
-        useMaterial3: true,
+    // The design is dark only; the chosen palette drives the accent.
+    return ListenableBuilder(
+      listenable: _theme,
+      builder: (context, _) => MaterialApp(
+        title: 'Eggel Companion',
+        themeMode: ThemeMode.dark,
+        darkTheme: ThemeData(
+          colorSchemeSeed: _theme.palette.accent,
+          brightness: Brightness.dark,
+          scaffoldBackgroundColor: eggelBackground,
+          useMaterial3: true,
+        ),
+        home: HomePage(speaker: widget.speaker, theme: _theme),
       ),
-      darkTheme: ThemeData(
-        colorSchemeSeed: const Color(0xFF6C5CFF),
-        brightness: Brightness.dark,
-        useMaterial3: true,
-      ),
-      home: HomePage(speaker: speaker),
     );
   }
 }
