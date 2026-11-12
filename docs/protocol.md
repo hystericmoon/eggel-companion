@@ -64,3 +64,9 @@ None decoded yet.
 
 - Never write to anything that looks like OTA or DFU. Firmware updates are out of scope; a bad update can permanently break the speaker.
 - Probe scripts: `probe/probe_hid.py` and `probe/probe_ble.py` are read-only; `probe/probe_ab_write.py` is guarded and dry-run by default.
+
+## Tuya handshake attempts (2026-11-11 to 11-12)
+- Local key and UUID obtained from the Tuya cloud project (stored in `probe/tuya.env`, not committed).
+- `probe/probe_tuya.py` sends the Tuya BLE device-info request (frame: seq varint, length varint, protocol 2, then flag 4, 16-byte IV, AES-CBC of seq/response-to/code/length/data/CRC16, key = md5 of the first 6 local-key characters). The frame layout and UUIDs match the official SDK's.
+- Result: the speaker accepts the writes but sends no notification on 0xFD50 (also subscribed to AB02/AB03). Reading 0xFD50 char 00000003 returns empty. The SDK reads that characteristic first; its code also checks `isPaired`, so the speaker may only answer on a bonded link.
+- Open: get a BLE bond from Windows, or capture the phone's traffic.
