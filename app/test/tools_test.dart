@@ -1,3 +1,4 @@
+import 'package:eggel_companion/settings/settings_store.dart';
 import 'package:eggel_companion/speaker/fake_speaker.dart';
 import 'package:eggel_companion/speaker/speaker.dart';
 import 'package:eggel_companion/tools/tools_controller.dart';
@@ -7,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  persistenceTests();
   test('sleep timer pauses when time is up', () {
     var now = DateTime(2026, 1, 1, 22);
     final s = FakeSpeaker();
@@ -166,5 +168,34 @@ void main() {
     await tester.pump();
     expect(find.byKey(const Key('needs-link')), findsOneWidget);
     tools.dispose();
+  });
+}
+
+void persistenceTests() {
+  test('tools and theme settings survive a restart', () {
+    final store = MemorySettingsStore();
+    final s = FakeSpeaker();
+    final t = ToolsController(s, settings: AppSettings(store));
+    t.configure(() {
+      t.alarmOn = true;
+      t.alarmMinutes = 6 * 60 + 45;
+      t.alarmDays.addAll([1, 3]);
+      t.nightOn = true;
+      t.nightCap = 25;
+    });
+    t.setVolumeCap(60);
+    final theme = ThemeController(ember, AppSettings(store))..select(aqua);
+
+    final again = ToolsController(s, settings: AppSettings(store));
+    expect(again.alarmOn, isTrue);
+    expect(again.alarmMinutes, 405);
+    expect(again.alarmDays, {1, 3});
+    expect(again.nightOn, isTrue);
+    expect(again.nightCap, 25);
+    expect(again.volumeCap, 60);
+    expect(ThemeController(ember, AppSettings(store)).palette, aqua);
+    t.dispose();
+    again.dispose();
+    theme.dispose();
   });
 }

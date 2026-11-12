@@ -23,6 +23,7 @@ class MainActivity : FlutterActivity() {
             .setMethodCallHandler { call, result ->
                 when (call.method) {
                     "getState" -> result.success(state())
+                    "storageDir" -> result.success(filesDir.absolutePath)
                     "play" -> { send(KeyEvent.KEYCODE_MEDIA_PLAY) { it.play() }; result.success(null) }
                     "pause" -> { send(KeyEvent.KEYCODE_MEDIA_PAUSE) { it.pause() }; result.success(null) }
                     "next" -> { send(KeyEvent.KEYCODE_MEDIA_NEXT) { it.skipToNext() }; result.success(null) }

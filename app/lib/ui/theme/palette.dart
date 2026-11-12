@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../settings/settings_store.dart';
+
 /// One color theme: the accent that glows, and two aurora colors behind it.
 class EggelPalette {
   const EggelPalette(this.name, this.accent, this.glow2, this.glow3);
@@ -50,16 +52,27 @@ const eggelMuted = Color(0xFFA9ACBA);
 /// Text drawn on top of the accent color.
 const eggelOnAccent = Color(0xFF0A0B10);
 
-/// Holds the chosen palette. In memory only for now; it resets on restart.
+/// Holds the chosen palette and remembers it in [settings] when given.
 class ThemeController extends ChangeNotifier {
-  ThemeController([EggelPalette initial = ember]) : _palette = initial;
+  ThemeController([EggelPalette initial = ember, this.settings])
+    : _palette = _saved(settings) ?? initial;
 
+  final AppSettings? settings;
   EggelPalette _palette;
   EggelPalette get palette => _palette;
+
+  static EggelPalette? _saved(AppSettings? s) {
+    final name = s?.get<String>('theme');
+    for (final p in allPalettes) {
+      if (p.name == name) return p;
+    }
+    return null;
+  }
 
   void select(EggelPalette p) {
     if (p == _palette) return;
     _palette = p;
+    settings?.set('theme', p.name);
     notifyListeners();
   }
 }

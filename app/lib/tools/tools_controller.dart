@@ -2,13 +2,45 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import '../settings/settings_store.dart';
 import '../speaker/speaker.dart';
 
 /// App-side tools that need no speaker protocol: a sleep timer that pauses
 /// playback, and a volume cap.
 class ToolsController extends ChangeNotifier {
-  ToolsController(this.speaker, {DateTime Function()? now})
-    : _now = now ?? DateTime.now;
+  ToolsController(this.speaker, {DateTime Function()? now, this.settings})
+    : _now = now ?? DateTime.now {
+    final s = settings;
+    if (s != null) {
+      _volumeCap = s.get<int>('cap');
+      alarmOn = s.get<bool>('alarmOn') ?? alarmOn;
+      alarmMinutes = s.get<int>('alarmMinutes') ?? alarmMinutes;
+      alarmVolume = s.get<int>('alarmVolume') ?? alarmVolume;
+      alarmDays.addAll(
+        (s.get<List<dynamic>>('alarmDays') ?? const []).whereType<int>(),
+      );
+      nightOn = s.get<bool>('nightOn') ?? nightOn;
+      nightStart = s.get<int>('nightStart') ?? nightStart;
+      nightEnd = s.get<int>('nightEnd') ?? nightEnd;
+      nightCap = s.get<int>('nightCap') ?? nightCap;
+    }
+  }
+
+  final AppSettings? settings;
+
+  void _persist() {
+    final s = settings;
+    if (s == null) return;
+    s.set('cap', _volumeCap);
+    s.set('alarmOn', alarmOn);
+    s.set('alarmMinutes', alarmMinutes);
+    s.set('alarmVolume', alarmVolume);
+    s.set('alarmDays', alarmDays.toList()..sort());
+    s.set('nightOn', nightOn);
+    s.set('nightStart', nightStart);
+    s.set('nightEnd', nightEnd);
+    s.set('nightCap', nightCap);
+  }
 
   final Speaker speaker;
   final DateTime Function() _now;
@@ -76,6 +108,7 @@ class ToolsController extends ChangeNotifier {
     change();
     _alarmFiredKey = null;
     checkSchedules();
+    _persist();
     notifyListeners();
   }
 
@@ -140,6 +173,7 @@ class ToolsController extends ChangeNotifier {
   /// Sets the cap (null removes it) and lowers the volume if it is above it.
   void setVolumeCap(int? cap) {
     _volumeCap = cap;
+    _persist();
     if (cap != null && speaker.state.volume > cap) {
       speaker.setVolume(cap.toDouble());
     }
