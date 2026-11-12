@@ -191,6 +191,13 @@ async def main():
             except Exception as ex:
                 log(f"could not subscribe {extra[4:8]}: {ex}")
         await asyncio.sleep(1.5)
+        # The official SDK reads characteristic 0003 right after service
+        # discovery (qddqppb.pdqppqb in the APK) before it does anything else.
+        try:
+            v = await client.read_gatt_char("00000003-0000-1001-8001-00805f9b07d0")
+            log(f"read 0003: {bytes(v).hex()}")
+        except Exception as ex:
+            log(f"read 0003 failed: {ex!r}")
 
         async def send(code, data=b""):
             for p in s.build(code, data):
