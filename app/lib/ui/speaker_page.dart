@@ -149,7 +149,7 @@ class _Row extends StatelessWidget {
   }
 }
 
-/// Rename and the speaker's own volume, shown only while the link is up.
+/// Rename, shown only while the link is up.
 class _LinkControls extends StatefulWidget {
   const _LinkControls({required this.link, required this.palette});
 
@@ -163,7 +163,6 @@ class _LinkControls extends StatefulWidget {
 class _LinkControlsState extends State<_LinkControls> {
   late final _name = TextEditingController(text: widget.link.name ?? '');
   String? _error;
-  double? _dragging;
 
   @override
   void dispose() {
@@ -184,14 +183,12 @@ class _LinkControlsState extends State<_LinkControls> {
 
   @override
   Widget build(BuildContext context) {
-    final l = widget.link;
-    final vol = l.volume;
     return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Speaker settings',
+            'Rename speaker',
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w600,
@@ -225,24 +222,6 @@ class _LinkControlsState extends State<_LinkControls> {
               ),
             ],
           ),
-          if (vol != null) ...[
-            const SizedBox(height: 16),
-            Text(
-              'Speaker volume  ${(_dragging ?? vol.toDouble()).round()}',
-              style: const TextStyle(fontSize: 13, color: eggelMuted),
-            ),
-            Slider(
-              key: const Key('speaker-volume'),
-              value: (_dragging ?? vol.toDouble()).clamp(0, 100),
-              min: 0,
-              max: 100,
-              onChanged: (v) => setState(() => _dragging = v),
-              onChangeEnd: (v) async {
-                await l.setSpeakerVolume(v.round()).catchError((_) {});
-                if (mounted) setState(() => _dragging = null);
-              },
-            ),
-          ],
         ],
       ),
     );
