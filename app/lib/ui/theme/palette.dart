@@ -48,6 +48,10 @@ const allPalettes = [ember, aqua, violet, mint, rose];
 /// Fixed surface colors shared by every theme.
 const eggelBackground = Color(0xFF07080C);
 const eggelText = Color(0xFFF4F4F6);
+
+/// Font for headings and big numbers (bundled in assets/fonts).
+const kHeadingFont = 'SpaceGrotesk';
+
 const eggelMuted = Color(0xFFA9ACBA);
 
 /// Text drawn on top of the accent color.

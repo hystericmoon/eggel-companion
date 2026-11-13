@@ -98,12 +98,14 @@ class DashboardPage extends StatelessWidget {
         const SizedBox(height: 20),
         const SoonCard(
           key: Key('find-card'),
+          icon: Icons.search,
           title: 'Find my speaker',
           subtitle: 'Play a chime to locate it. Soon.',
         ),
         const SizedBox(height: 20),
         const SoonCard(
           key: Key('megaphone-card'),
+          icon: Icons.mic_none,
           title: 'Megaphone',
           subtitle: 'Send your mic to the speaker. Soon.',
         ),
@@ -221,6 +223,7 @@ class _Header extends StatelessWidget {
                   name,
                   key: const Key('speaker-name'),
                   style: const TextStyle(
+                    fontFamily: kHeadingFont,
                     fontSize: 26,
                     fontWeight: FontWeight.w700,
                     color: eggelText,
@@ -378,10 +381,9 @@ class _NowPlayingCard extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 208,
-            height: 208,
-            padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
-            alignment: Alignment.bottomCenter,
+            width: 240,
+            height: 240,
+            clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
               gradient: LinearGradient(
@@ -397,9 +399,33 @@ class _NowPlayingCard extends StatelessWidget {
                 ),
               ],
             ),
-            child: Visualizer(
-              color: Colors.white,
-              active: state.connected && state.playing,
+            child: Stack(
+              children: [
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  height: 240 * 0.46,
+                  child: const DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                        colors: [Color(0x8C07080C), Color(0x0007080C)],
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 14,
+                  right: 14,
+                  bottom: 14,
+                  child: Visualizer(
+                    color: Colors.white,
+                    active: state.connected && state.playing,
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(width: 28),
@@ -411,13 +437,21 @@ class _NowPlayingCard extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Now playing on this computer',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: palette.accent,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    Row(
+                      children: [
+                        if (state.playing) ...[
+                          _Tag('Live', color: palette.accent),
+                          const SizedBox(width: 10),
+                        ],
+                        const Flexible(
+                          child: Text(
+                            'Now playing on this computer',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(fontSize: 13, color: eggelMuted),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 12),
                     Text(
@@ -426,10 +460,11 @@ class _NowPlayingCard extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        fontSize: 32,
+                        fontFamily: kHeadingFont,
+                        fontSize: 34,
                         fontWeight: FontWeight.w700,
                         color: eggelText,
-                        letterSpacing: -0.5,
+                        letterSpacing: -0.7,
                         height: 1.1,
                       ),
                     ),
@@ -495,7 +530,7 @@ class _VolumeCard extends StatelessWidget {
             palette: palette,
             label: formatPercent(state.volume),
             pulsing: on && state.playing,
-            size: 196,
+            size: 216,
           ),
           const SizedBox(width: 24),
           Flexible(
@@ -640,6 +675,7 @@ class _SoundCard extends StatelessWidget {
               const Text(
                 'Sound',
                 style: TextStyle(
+                  fontFamily: kHeadingFont,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: eggelText,
@@ -679,64 +715,87 @@ class _SoundCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.25),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
-            ),
-            child: Column(
-              children: [
-                EqCurve(gains: gains, palette: palette, height: 120),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    for (var i = 0; i < 10; i++)
-                      Expanded(
-                        child: Column(
-                          children: [
-                            Text(
-                              '${gains[i] > 0 ? '+' : ''}${gains[i].round()}',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: eggelText,
-                              ),
-                            ),
-                            SizedBox(
-                              height: 120,
-                              child: RotatedBox(
-                                quarterTurns: 3,
-                                child: Slider(
-                                  value: gains[i],
-                                  min: -12,
-                                  max: 12,
-                                  onChanged: null,
-                                ),
-                              ),
-                            ),
-                            Text(
-                              _bandLabels[i],
-                              style: const TextStyle(
-                                fontSize: 11,
-                                color: eggelMuted,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                  ],
+          _Well(
+            padding: const EdgeInsets.fromLTRB(18, 18, 18, 12),
+            child: EqCurve(gains: gains, palette: palette, height: 150),
+          ),
+          const SizedBox(height: 20),
+          _Well(
+            padding: const EdgeInsets.fromLTRB(10, 14, 10, 12),
+            child: SliderTheme(
+              data: SliderThemeData(
+                trackHeight: 4,
+                disabledActiveTrackColor: palette.accent,
+                disabledInactiveTrackColor: Colors.white.withValues(
+                  alpha: 0.14,
                 ),
-              ],
+                disabledThumbColor: palette.accent,
+                thumbShape: const RoundSliderThumbShape(
+                  disabledThumbRadius: 7,
+                  enabledThumbRadius: 7,
+                ),
+                overlayShape: SliderComponentShape.noOverlay,
+                trackShape: const RoundedRectSliderTrackShape(),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  for (var i = 0; i < 10; i++)
+                    Expanded(
+                      child: Column(
+                        children: [
+                          Text(
+                            '${gains[i] > 0 ? '+' : ''}${gains[i].round()}',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: eggelText,
+                            ),
+                          ),
+                          SizedBox(
+                            height: 132,
+                            child: RotatedBox(
+                              quarterTurns: 3,
+                              child: Slider(
+                                value: gains[i],
+                                min: -12,
+                                max: 12,
+                                onChanged: null,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            _bandLabels[i],
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: eggelMuted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
-          const SizedBox(height: 12),
-          const Text(
-            'Custom bands (31 Hz to 16 kHz, plus and minus 12 dB) need the speaker\'s band command, which is not decoded yet. The curve is a preview shape.',
-            key: Key('bands-note'),
-            style: TextStyle(fontSize: 13, color: eggelMuted, height: 1.4),
+          const SizedBox(height: 16),
+          const Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SoonTag(label: 'Needs decoding'),
+              SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Custom bands (31 Hz to 16 kHz, plus and minus 12 dB) need the speaker\'s band command, which is not decoded yet. The curve is a preview shape.',
+                  key: Key('bands-note'),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: eggelMuted,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -770,6 +829,7 @@ class _SpeakerCard extends StatelessWidget {
               const Text(
                 'Speaker',
                 style: TextStyle(
+                  fontFamily: kHeadingFont,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: eggelText,
@@ -788,6 +848,7 @@ class _SpeakerCard extends StatelessWidget {
                 Text(
                   '${l!.battery}',
                   style: const TextStyle(
+                    fontFamily: kHeadingFont,
                     fontSize: 48,
                     fontWeight: FontWeight.w700,
                     color: eggelText,
@@ -849,7 +910,7 @@ class _SpeakerCard extends StatelessWidget {
                     style: const TextStyle(fontSize: 14, color: eggelText),
                   ),
                   const Spacer(),
-                  const _Tag('Soon', color: eggelMuted),
+                  const SoonTag(),
                 ],
               ),
             ),
@@ -857,4 +918,23 @@ class _SpeakerCard extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The dark inset box behind the EQ curve and the band sliders.
+class _Well extends StatelessWidget {
+  const _Well({required this.child, required this.padding});
+
+  final Widget child;
+  final EdgeInsets padding;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: padding,
+    decoration: BoxDecoration(
+      color: Colors.black.withValues(alpha: 0.25),
+      borderRadius: BorderRadius.circular(18),
+      border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+    ),
+    child: child,
+  );
 }

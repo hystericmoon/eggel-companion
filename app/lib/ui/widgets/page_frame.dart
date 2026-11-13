@@ -58,12 +58,14 @@ class GlowChip extends StatelessWidget {
     required this.palette,
     this.selected = false,
     this.onTap,
+    this.compact = false,
   });
 
   final String label;
   final EggelPalette palette;
   final bool selected;
   final VoidCallback? onTap;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -74,9 +76,8 @@ class GlowChip extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          constraints: const BoxConstraints(minHeight: 40),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          alignment: Alignment.center,
+          constraints: BoxConstraints(minHeight: compact ? 36 : 40),
+          padding: EdgeInsets.symmetric(horizontal: compact ? 0 : 16),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
             color: selected
@@ -96,12 +97,17 @@ class GlowChip extends StatelessWidget {
                   ]
                 : null,
           ),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-              color: selected ? eggelOnAccent : eggelText,
+          // Center(widthFactor: 1) keeps the pill as wide as its label
+          // (a Container with `alignment` would fill a Wrap's whole row).
+          child: Center(
+            widthFactor: 1,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                color: selected ? eggelOnAccent : eggelText,
+              ),
             ),
           ),
         ),

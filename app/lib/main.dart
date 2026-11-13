@@ -84,6 +84,7 @@ class _EggelAppState extends State<EggelApp> {
           brightness: Brightness.dark,
           scaffoldBackgroundColor: eggelBackground,
           useMaterial3: true,
+          fontFamily: 'Inter',
         ),
         home: AppShell(
           speaker: widget.speaker,

@@ -88,8 +88,10 @@ class _VolumeRingState extends State<VolumeRing>
                 widget.label,
                 key: const Key('volume-readout'),
                 style: TextStyle(
-                  fontSize: widget.size * 0.26,
-                  fontWeight: FontWeight.w600,
+                  fontFamily: kHeadingFont,
+                  fontSize: widget.size * 0.296,
+                  letterSpacing: -1.5,
+                  fontWeight: FontWeight.w700,
                   height: 1,
                   color: eggelText,
                 ),
@@ -123,22 +125,9 @@ class _RingPainter extends CustomPainter {
     final c = size.center(Offset.zero);
     final r = size.width / 2;
 
-    // Outer tick ring.
-    final tick = Paint()
-      ..color = Colors.white.withValues(alpha: 0.16)
-      ..strokeWidth = 1.5
-      ..strokeCap = StrokeCap.round;
-    const ticks = 60;
-    for (var i = 0; i < ticks; i++) {
-      final a = i / ticks * 2 * math.pi;
-      final p1 = c + Offset(math.cos(a), math.sin(a)) * (r - 2);
-      final p2 = c + Offset(math.cos(a), math.sin(a)) * (r - 7);
-      canvas.drawLine(p1, p2, tick);
-    }
-
-    final ringR = r - 22;
+    final stroke = size.width * 0.065;
+    final ringR = r - stroke;
     final rect = Rect.fromCircle(center: c, radius: ringR);
-    final stroke = size.width * 0.057;
 
     canvas.drawCircle(
       c,
