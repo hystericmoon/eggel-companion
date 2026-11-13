@@ -26,7 +26,7 @@ Future<void> main() async {
       : FakeSpeaker();
   // The speaker's own settings (battery, EQ) over Bluetooth LE. Windows only
   // for now; needs the Tuya credentials in settings.json (key 'tuya').
-  final SpeakerLink? link = Platform.isWindows
+  final SpeakerLink? link = (Platform.isWindows || Platform.isAndroid)
       ? SpeakerLink(
           ChannelBleLink(),
           credentials: TuyaCredentials.fromMap(settings.get<Map>('tuya')),

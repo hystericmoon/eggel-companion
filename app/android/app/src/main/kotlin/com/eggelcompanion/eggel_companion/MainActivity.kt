@@ -19,6 +19,9 @@ class MainActivity : FlutterActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        val ble = BleBridge(this).also { bleBridge = it }
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "eggel/ble")
+            .setMethodCallHandler { call, result -> ble.handle(call, result) }
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "eggel/media")
             .setMethodCallHandler { call, result ->
                 when (call.method) {
@@ -41,6 +44,13 @@ class MainActivity : FlutterActivity() {
                     else -> result.notImplemented()
                 }
             }
+    }
+
+    private var bleBridge: BleBridge? = null
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        bleBridge?.onPermissionResult(requestCode, grantResults)
     }
 
     private fun hasListenerAccess(): Boolean {
