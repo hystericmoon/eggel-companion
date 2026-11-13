@@ -103,6 +103,11 @@ class DataPoint {
       DataPoint(id, 1, Uint8List.fromList([v ? 1 : 0]));
   static DataPoint enumeration(int id, int v) =>
       DataPoint(id, 4, Uint8List.fromList([v]));
+  static DataPoint number(int id, int v) => DataPoint(
+    id,
+    2,
+    Uint8List.fromList([v >> 24, (v >> 16) & 0xFF, (v >> 8) & 0xFF, v & 0xFF]),
+  );
   static DataPoint raw(int id, List<int> bytes) =>
       DataPoint(id, 0, Uint8List.fromList(bytes));
 }

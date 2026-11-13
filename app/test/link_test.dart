@@ -138,6 +138,29 @@ void main() {
     final write = ble.received.lastWhere((f) => f.code == TuyaCode.dpWrite);
     expect(write.body.sublist(5), _hex('14010001011504000101'));
     expect(link.eqPreset, 1);
+
+    await link.rename('Kitchen');
+    await link.setSpeakerVolume(40);
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+    final writes = ble.received
+        .where((f) => f.code == TuyaCode.dpWrite)
+        .toList();
+    expect(writes[writes.length - 2].body.sublist(5), [
+      ..._hex('2000'),
+      0,
+      7,
+      ...'Kitchen'.codeUnits,
+    ]);
+    expect(
+      writes.last.body.sublist(5),
+      _hex(
+        '050200040000'
+        '0028',
+      ),
+    );
+    expect(link.name, 'Kitchen');
+    expect(link.volume, 40);
+    await expectLater(link.rename(''), throwsArgumentError);
     link.dispose();
   });
 

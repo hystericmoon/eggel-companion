@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 
@@ -269,6 +270,31 @@ class SpeakerLink extends ChangeNotifier {
       DataPoint.enumeration(Dp.eqPreset, index),
     ]);
     eqPreset = index;
+    notifyListeners();
+  }
+
+  /// The most bytes the speaker name may take (the phone app wrote 14; this
+  /// is a cautious cap, not a known limit).
+  static const maxNameBytes = 24;
+
+  /// Renames the speaker (datapoint 32, UTF-8 text, as the phone app does).
+  Future<void> rename(String newName) async {
+    final trimmed = newName.trim();
+    final bytes = utf8.encode(trimmed);
+    if (bytes.isEmpty || bytes.length > maxNameBytes) {
+      throw ArgumentError('The name must be 1 to $maxNameBytes bytes');
+    }
+    await _writeDps([DataPoint.raw(Dp.name, bytes)]);
+    name = trimmed;
+    notifyListeners();
+  }
+
+  /// Sets the speaker's own volume, 0 to 100 (datapoint 5). The phone app
+  /// never wrote this in the capture, so the range is read from reports only.
+  Future<void> setSpeakerVolume(int v) async {
+    final clamped = v.clamp(0, 100);
+    await _writeDps([DataPoint.number(Dp.volume, clamped)]);
+    volume = clamped;
     notifyListeners();
   }
 
