@@ -80,7 +80,10 @@ class ToolsController extends ChangeNotifier {
 
   /// Starts the once-a-second check that fires the alarm and night mode.
   void startClock() {
-    _clock ??= Timer.periodic(const Duration(seconds: 1), (_) => checkSchedules());
+    _clock ??= Timer.periodic(
+      const Duration(seconds: 1),
+      (_) => checkSchedules(),
+    );
   }
 
   bool get nightActive {
@@ -214,7 +217,9 @@ class CappedSpeaker implements Speaker {
   @override
   Future<void> setVolume(double volume) {
     final cap = tools.effectiveCap;
-    return inner.setVolume(cap == null ? volume : volume.clamp(0, cap.toDouble()));
+    return inner.setVolume(
+      cap == null ? volume : volume.clamp(0, cap.toDouble()),
+    );
   }
 
   @override

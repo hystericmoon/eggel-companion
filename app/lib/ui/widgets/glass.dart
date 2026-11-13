@@ -31,7 +31,10 @@ class AuroraBackground extends StatelessWidget {
         gradient: RadialGradient(
           center: at,
           radius: radius,
-          colors: [color.withValues(alpha: alpha), color.withValues(alpha: 0)],
+          colors: [
+            color.withValues(alpha: alpha),
+            color.withValues(alpha: 0),
+          ],
         ),
       ),
     );

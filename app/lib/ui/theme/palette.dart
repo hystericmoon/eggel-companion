@@ -49,6 +49,7 @@ const allPalettes = [ember, aqua, violet, mint, rose];
 const eggelBackground = Color(0xFF07080C);
 const eggelText = Color(0xFFF4F4F6);
 const eggelMuted = Color(0xFFA9ACBA);
+
 /// Text drawn on top of the accent color.
 const eggelOnAccent = Color(0xFF0A0B10);
 

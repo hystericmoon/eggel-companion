@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../link/speaker_link.dart';
 import '../speaker/speaker.dart';
 import 'theme/palette.dart';
 import 'widgets/glass.dart';
@@ -12,14 +13,34 @@ class SpeakerPage extends StatelessWidget {
     required this.speaker,
     required this.palette,
     required this.theme,
+    this.link,
   });
 
+  final SpeakerLink? link;
   final Speaker speaker;
   final EggelPalette palette;
   final ThemeController? theme;
 
   @override
   Widget build(BuildContext context) {
+    final l = link;
+    if (l == null) return _page(context);
+    return ListenableBuilder(listenable: l, builder: (c, _) => _page(c));
+  }
+
+  List<Widget> _linkRows(SpeakerLink l) => [
+    _Row(
+      'Speaker link',
+      l.status == LinkStatus.connected
+          ? 'Connected'
+          : l.available
+          ? (l.detail.isEmpty ? 'Connecting' : l.detail)
+          : 'Needs the Tuya key in settings.json',
+    ),
+    if (l.battery != null) _Row('Battery', '${l.battery}%'),
+  ];
+
+  Widget _page(BuildContext context) {
     return StreamBuilder<SpeakerState>(
       stream: speaker.states,
       initialData: speaker.state,
@@ -35,30 +56,32 @@ class SpeakerPage extends StatelessWidget {
                   _Row('Name', s.name),
                   _Row('Status', s.connected ? 'Connected' : 'Not connected'),
                   _Row('Output', s.name),
+                  if (link != null) ..._linkRows(link!),
                 ],
               ),
             ),
-            GlassCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text(
-                    'Needs the speaker link',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: eggelText,
+            if (link?.status != LinkStatus.connected)
+              GlassCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    Text(
+                      'Needs the speaker link',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: eggelText,
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 6),
-                  Text(
-                    'Battery, rename, stereo pair, auto power-off and voice prompts.',
-                    key: Key('needs-link'),
-                    style: TextStyle(fontSize: 13, color: eggelMuted),
-                  ),
-                ],
+                    SizedBox(height: 6),
+                    Text(
+                      'Battery, rename, stereo pair, auto power-off and voice prompts.',
+                      key: Key('needs-link'),
+                      style: TextStyle(fontSize: 13, color: eggelMuted),
+                    ),
+                  ],
+                ),
               ),
-            ),
             if (theme != null)
               GlassCard(
                 child: Column(

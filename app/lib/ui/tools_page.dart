@@ -26,7 +26,10 @@ class ToolsPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const _Title('Sleep timer', 'Pauses playback when time is up'),
+                  const _Title(
+                    'Sleep timer',
+                    'Pauses playback when time is up',
+                  ),
                   const SizedBox(height: 12),
                   if (left != null) ...[
                     Row(
@@ -57,7 +60,9 @@ class ToolsPage extends StatelessWidget {
                         for (final m in [15, 30, 60, 90])
                           GlowChip(
                             key: Key('sleep-$m'),
-                            label: m < 60 ? '$m min' : '${m ~/ 60} h${m % 60 == 0 ? '' : ' 30'}',
+                            label: m < 60
+                                ? '$m min'
+                                : '${m ~/ 60} h${m % 60 == 0 ? '' : ' 30'}',
                             palette: palette,
                             onTap: () => tools.startSleep(Duration(minutes: m)),
                           ),
@@ -125,7 +130,10 @@ class ToolsPage extends StatelessWidget {
                         label: _clockText(tools.alarmMinutes),
                         palette: palette,
                         onTap: () async {
-                          final t = await _pickTime(context, tools.alarmMinutes);
+                          final t = await _pickTime(
+                            context,
+                            tools.alarmMinutes,
+                          );
                           if (t != null) {
                             tools.configure(() => tools.alarmMinutes = t);
                           }
@@ -138,14 +146,17 @@ class ToolsPage extends StatelessWidget {
                           palette: palette,
                           selected: tools.alarmDays.contains(d),
                           onTap: () => tools.configure(() {
-                            if (!tools.alarmDays.remove(d)) tools.alarmDays.add(d);
+                            if (!tools.alarmDays.remove(d))
+                              tools.alarmDays.add(d);
                           }),
                         ),
                     ],
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    tools.alarmDays.isEmpty ? 'No days picked: rings once.' : 'Repeats on the days shown.',
+                    tools.alarmDays.isEmpty
+                        ? 'No days picked: rings once.'
+                        : 'Repeats on the days shown.',
                     style: const TextStyle(fontSize: 12, color: eggelMuted),
                   ),
                   const SizedBox(height: 10),
@@ -159,7 +170,8 @@ class ToolsPage extends StatelessWidget {
                           label: 'Vol $v',
                           palette: palette,
                           selected: tools.alarmVolume == v,
-                          onTap: () => tools.configure(() => tools.alarmVolume = v),
+                          onTap: () =>
+                              tools.configure(() => tools.alarmVolume = v),
                         ),
                     ],
                   ),
@@ -218,7 +230,8 @@ class ToolsPage extends StatelessWidget {
                           label: 'Max $c',
                           palette: palette,
                           selected: tools.nightCap == c,
-                          onTap: () => tools.configure(() => tools.nightCap = c),
+                          onTap: () =>
+                              tools.configure(() => tools.nightCap = c),
                         ),
                     ],
                   ),

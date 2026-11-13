@@ -2,6 +2,8 @@ import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
 
+import 'link/ble_link.dart';
+import 'link/speaker_link.dart';
 import 'settings/settings_store.dart';
 import 'speaker/channel_speaker.dart';
 import 'speaker/fake_speaker.dart';
@@ -22,12 +24,22 @@ Future<void> main() async {
       : (Platform.isAndroid || Platform.isMacOS)
       ? ChannelSpeaker()
       : FakeSpeaker();
+  // The speaker's own settings (battery, EQ) over Bluetooth LE. Windows only
+  // for now; needs the Tuya credentials in settings.json (key 'tuya').
+  final SpeakerLink? link = Platform.isWindows
+      ? SpeakerLink(
+          ChannelBleLink(),
+          credentials: TuyaCredentials.fromMap(settings.get<Map>('tuya')),
+        )
+      : null;
+  link?.start();
   final tools = ToolsController(inner, settings: settings)..startClock();
   runApp(
     EggelApp(
       speaker: CappedSpeaker(inner, tools),
       tools: tools,
       settings: settings,
+      link: link,
     ),
   );
 }
@@ -38,8 +50,10 @@ class EggelApp extends StatefulWidget {
     required this.speaker,
     required this.tools,
     this.settings,
+    this.link,
   });
 
+  final SpeakerLink? link;
   final AppSettings? settings;
   final Speaker speaker;
   final ToolsController tools;
@@ -75,6 +89,7 @@ class _EggelAppState extends State<EggelApp> {
           speaker: widget.speaker,
           theme: _theme,
           tools: widget.tools,
+          link: widget.link,
         ),
       ),
     );

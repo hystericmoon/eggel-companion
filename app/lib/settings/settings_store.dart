@@ -35,13 +35,17 @@ class FileSettingsStore implements SettingsStore {
         if (base != null) dir = '$base${Platform.pathSeparator}EggelCompanion';
       } else if (Platform.isMacOS) {
         final home = env['HOME'];
-        if (home != null) dir = '$home/Library/Application Support/EggelCompanion';
+        if (home != null)
+          dir = '$home/Library/Application Support/EggelCompanion';
       } else if (Platform.isAndroid) {
-        dir = await const MethodChannel('eggel/media').invokeMethod<String>('storageDir');
+        dir = await const MethodChannel('eggel/media')
+            .invokeMethod<String>('storageDir');
       }
       if (dir == null) return null;
       await Directory(dir).create(recursive: true);
-      return FileSettingsStore(File('$dir${Platform.pathSeparator}settings.json'));
+      return FileSettingsStore(
+        File('$dir${Platform.pathSeparator}settings.json'),
+      );
     } catch (_) {
       return null;
     }

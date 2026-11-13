@@ -26,8 +26,11 @@ const double kShape = 0.55;
 double deviceToShown(double device, double floor) {
   if (device <= floor) return 0;
   if (floor <= 0) return device.clamp(0.0, 100.0).toDouble();
-  final f = log(device / floor) / log(100 / floor); // 0..1 along the geometric span
-  return (100 * pow(f.clamp(0.0, 1.0), 1 / kShape)).clamp(0.0, 100.0).toDouble();
+  final f =
+      log(device / floor) / log(100 / floor); // 0..1 along the geometric span
+  return (100 * pow(f.clamp(0.0, 1.0), 1 / kShape))
+      .clamp(0.0, 100.0)
+      .toDouble();
 }
 
 /// Shown percent -> device percent. 0 stays silent; anything above it starts

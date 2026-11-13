@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../link/speaker_link.dart';
 import '../speaker/speaker.dart';
 import '../tools/tools_controller.dart';
 import 'home_page.dart';
@@ -15,8 +16,10 @@ class AppShell extends StatefulWidget {
     required this.speaker,
     required this.theme,
     required this.tools,
+    this.link,
   });
 
+  final SpeakerLink? link;
   final Speaker speaker;
   final ThemeController theme;
   final ToolsController tools;
@@ -45,12 +48,13 @@ class _AppShellState extends State<AppShell> {
           index: _index,
           children: [
             HomePage(speaker: widget.speaker, theme: widget.theme),
-            SoundPage(palette: palette),
+            SoundPage(palette: palette, link: widget.link),
             ToolsPage(tools: widget.tools, palette: palette),
             SpeakerPage(
               speaker: widget.speaker,
               palette: palette,
               theme: widget.theme,
+              link: widget.link,
             ),
           ],
         );

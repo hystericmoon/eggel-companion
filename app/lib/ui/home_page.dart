@@ -57,7 +57,11 @@ class HomePage extends StatelessWidget {
                         const SizedBox(height: 14),
                         _NowPlaying(state: s, palette: palette),
                         const SizedBox(height: 18),
-                        _Transport(state: s, speaker: speaker, palette: palette),
+                        _Transport(
+                          state: s,
+                          speaker: speaker,
+                          palette: palette,
+                        ),
                         const SizedBox(height: 18),
                         _VolumeSection(
                           state: s,
@@ -221,7 +225,11 @@ class _NowPlaying extends StatelessWidget {
                 ),
               ],
             ),
-            child: Icon(Icons.speaker_outlined, size: 32, color: palette.accent),
+            child: Icon(
+              Icons.speaker_outlined,
+              size: 32,
+              color: palette.accent,
+            ),
           ),
           const SizedBox(width: 14),
           Expanded(

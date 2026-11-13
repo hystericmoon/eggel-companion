@@ -3,6 +3,7 @@
 #include <optional>
 
 #include "flutter/generated_plugin_registrant.h"
+#include "ble_channel.h"
 #include "media_channel.h"
 
 FlutterWindow::FlutterWindow(const flutter::DartProject& project)
@@ -27,6 +28,7 @@ bool FlutterWindow::OnCreate() {
   }
   RegisterPlugins(flutter_controller_->engine());
   RegisterMediaChannel(flutter_controller_->engine()->messenger());
+  RegisterBleChannel(flutter_controller_->engine()->messenger());
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
   flutter_controller_->engine()->SetNextFrameCallback([&]() {

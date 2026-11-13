@@ -1,27 +1,35 @@
 import 'package:flutter/material.dart';
 
+import '../link/speaker_link.dart';
 import 'theme/palette.dart';
 import 'widgets/eq_curve.dart';
 import 'widgets/glass.dart';
 import 'widgets/page_frame.dart';
 
-/// Sound: the EQ screen frame. Controls are off until the speaker protocol
-/// is decoded, so nothing here pretends to change the sound.
+/// Sound: EQ presets. Live when the speaker link is connected; otherwise a
+/// preview that says why, so nothing pretends to change the sound.
 class SoundPage extends StatelessWidget {
-  const SoundPage({super.key, required this.palette});
+  const SoundPage({super.key, required this.palette, this.link});
 
   final EggelPalette palette;
-
-  static const _presets = [
-    'Default',
-    'Bass boost',
-    'Bass reducer',
-    'Treble boost',
-    'Treble reducer',
-  ];
+  final SpeakerLink? link;
 
   @override
   Widget build(BuildContext context) {
+    final l = link;
+    if (l == null) return _build(context, null);
+    return ListenableBuilder(listenable: l, builder: (c, _) => _build(c, l));
+  }
+
+  Widget _build(BuildContext context, SpeakerLink? l) {
+    final live = l != null && l.status == LinkStatus.connected;
+    final note = l == null
+        ? 'The equalizer needs the speaker link, which is not available on this device yet. This is a preview.'
+        : !l.available
+        ? 'Add the speaker\'s Tuya key to settings.json to turn on the equalizer. This is a preview.'
+        : live
+        ? 'Presets change the speaker itself.'
+        : '${l.detail.isEmpty ? 'Connecting to the speaker' : l.detail}. This is a preview until it connects.';
     return PageFrame(
       palette: palette,
       title: 'Sound',
@@ -29,29 +37,36 @@ class SoundPage extends StatelessWidget {
         GlassCard(
           child: Row(
             children: [
-              Icon(Icons.lock_outline, color: palette.accent),
+              Icon(
+                live ? Icons.link : Icons.lock_outline,
+                color: palette.accent,
+              ),
               const SizedBox(width: 12),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'The equalizer needs the speaker link, which is not set up yet. This is a preview.',
-                  key: Key('eq-note'),
-                  style: TextStyle(fontSize: 13, color: eggelMuted),
+                  note,
+                  key: const Key('eq-note'),
+                  style: const TextStyle(fontSize: 13, color: eggelMuted),
                 ),
               ),
             ],
           ),
         ),
         Opacity(
-          opacity: 0.55,
+          opacity: live ? 1 : 0.55,
           child: Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
-              for (var i = 0; i < _presets.length; i++)
+              for (var i = 0; i < eqPresetNames.length; i++)
                 GlowChip(
-                  label: _presets[i],
+                  key: Key('preset-$i'),
+                  label: eqPresetNames[i],
                   palette: palette,
-                  selected: i == 0,
+                  selected: i == (l?.eqPreset ?? 0),
+                  onTap: live
+                      ? () => l.setEqPreset(i).catchError((_) {})
+                      : null,
                 ),
             ],
           ),

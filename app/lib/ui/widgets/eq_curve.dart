@@ -45,7 +45,8 @@ class _EqPainter extends CustomPainter {
       for (var i = 0; i < n; i++)
         Offset(
           pad + w * i / (n - 1),
-          size.height / 2 - (gains[i].clamp(-12, 12) / 12) * (size.height / 2 - pad),
+          size.height / 2 -
+              (gains[i].clamp(-12, 12) / 12) * (size.height / 2 - pad),
         ),
     ];
 
@@ -60,7 +61,14 @@ class _EqPainter extends CustomPainter {
     final path = Path()..moveTo(pts.first.dx, pts.first.dy);
     for (var i = 0; i < n - 1; i++) {
       final mid = (pts[i].dx + pts[i + 1].dx) / 2;
-      path.cubicTo(mid, pts[i].dy, mid, pts[i + 1].dy, pts[i + 1].dx, pts[i + 1].dy);
+      path.cubicTo(
+        mid,
+        pts[i].dy,
+        mid,
+        pts[i + 1].dy,
+        pts[i + 1].dx,
+        pts[i + 1].dy,
+      );
     }
 
     final fill = Path.from(path)

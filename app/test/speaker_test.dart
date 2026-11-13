@@ -70,7 +70,9 @@ void main() {
       final s = FakeSpeaker();
       final theme = ThemeController();
       await tester.pumpWidget(
-        MaterialApp(home: HomePage(speaker: s, theme: theme)),
+        MaterialApp(
+          home: HomePage(speaker: s, theme: theme),
+        ),
       );
       expect(theme.palette.name, 'Ember');
       await tester.ensureVisible(find.byKey(const Key('theme-aqua')));
