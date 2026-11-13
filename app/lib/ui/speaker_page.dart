@@ -61,7 +61,7 @@ class SpeakerPage extends StatelessWidget {
               ),
             ),
             if (link?.status == LinkStatus.connected)
-              _LinkControls(link: link!, palette: palette),
+              LinkRename(link: link!, palette: palette),
             if (link?.status != LinkStatus.connected)
               GlassCard(
                 child: Column(
@@ -150,17 +150,25 @@ class _Row extends StatelessWidget {
 }
 
 /// Rename, shown only while the link is up.
-class _LinkControls extends StatefulWidget {
-  const _LinkControls({required this.link, required this.palette});
+class LinkRename extends StatefulWidget {
+  const LinkRename({
+    super.key,
+    required this.link,
+    required this.palette,
+    this.framed = true,
+  });
+
+  /// False when it sits inside a card of its own already.
+  final bool framed;
 
   final SpeakerLink link;
   final EggelPalette palette;
 
   @override
-  State<_LinkControls> createState() => _LinkControlsState();
+  State<LinkRename> createState() => _LinkRenameState();
 }
 
-class _LinkControlsState extends State<_LinkControls> {
+class _LinkRenameState extends State<LinkRename> {
   late final _name = TextEditingController(text: widget.link.name ?? '');
   String? _error;
 
@@ -183,47 +191,46 @@ class _LinkControlsState extends State<_LinkControls> {
 
   @override
   Widget build(BuildContext context) {
-    return GlassCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Rename speaker',
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: eggelText,
-            ),
+    final body = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Rename speaker',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            color: eggelText,
           ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  key: const Key('rename-field'),
-                  controller: _name,
-                  maxLength: SpeakerLink.maxNameBytes,
-                  style: const TextStyle(color: eggelText),
-                  decoration: InputDecoration(
-                    labelText: 'Speaker name',
-                    errorText: _error,
-                    counterText: '',
-                  ),
-                  onSubmitted: (_) => _save(),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                key: const Key('rename-field'),
+                controller: _name,
+                maxLength: SpeakerLink.maxNameBytes,
+                style: const TextStyle(color: eggelText),
+                decoration: InputDecoration(
+                  labelText: 'Speaker name',
+                  errorText: _error,
+                  counterText: '',
                 ),
+                onSubmitted: (_) => _save(),
               ),
-              const SizedBox(width: 12),
-              GlowChip(
-                key: const Key('rename-save'),
-                label: 'Rename',
-                palette: widget.palette,
-                selected: true,
-                onTap: _save,
-              ),
-            ],
-          ),
-        ],
-      ),
+            ),
+            const SizedBox(width: 12),
+            GlowChip(
+              key: const Key('rename-save'),
+              label: 'Rename',
+              palette: widget.palette,
+              selected: true,
+              onTap: _save,
+            ),
+          ],
+        ),
+      ],
     );
+    return widget.framed ? GlassCard(child: body) : body;
   }
 }

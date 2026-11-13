@@ -49,7 +49,7 @@ class HomePage extends StatelessWidget {
                         _Header(state: s, palette: palette),
                         if (!s.mediaAccess) ...[
                           const SizedBox(height: 12),
-                          _AccessBanner(
+                          AccessBanner(
                             palette: palette,
                             onAllow: speaker.requestMediaAccess,
                           ),
@@ -57,11 +57,7 @@ class HomePage extends StatelessWidget {
                         const SizedBox(height: 14),
                         _NowPlaying(state: s, palette: palette),
                         const SizedBox(height: 18),
-                        _Transport(
-                          state: s,
-                          speaker: speaker,
-                          palette: palette,
-                        ),
+                        Transport(state: s, speaker: speaker, palette: palette),
                         const SizedBox(height: 18),
                         _VolumeSection(
                           state: s,
@@ -70,7 +66,7 @@ class HomePage extends StatelessWidget {
                         ),
                         if (theme != null) ...[
                           const SizedBox(height: 22),
-                          _ThemePicker(controller: theme!),
+                          ThemePicker(controller: theme!),
                         ],
                       ],
                     ),
@@ -85,7 +81,7 @@ class HomePage extends StatelessWidget {
   }
 }
 
-String _outputLabel(String name) {
+String outputLabel(String name) {
   final n = name.toLowerCase();
   if (n.contains('active 3')) return 'Bluetooth';
   if (n.contains('(speaker)')) return 'USB-C';
@@ -139,12 +135,12 @@ class _Header extends StatelessWidget {
             ],
           ),
         ),
-        if (_outputLabel(state.name).isNotEmpty)
+        if (outputLabel(state.name).isNotEmpty)
           GlassCard(
             radius: 16,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             child: Text(
-              _outputLabel(state.name),
+              outputLabel(state.name),
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
@@ -157,8 +153,8 @@ class _Header extends StatelessWidget {
   }
 }
 
-class _AccessBanner extends StatelessWidget {
-  const _AccessBanner({required this.palette, required this.onAllow});
+class AccessBanner extends StatelessWidget {
+  const AccessBanner({required this.palette, required this.onAllow});
 
   final EggelPalette palette;
   final VoidCallback onAllow;
@@ -267,8 +263,8 @@ class _NowPlaying extends StatelessWidget {
   }
 }
 
-class _Transport extends StatelessWidget {
-  const _Transport({
+class Transport extends StatelessWidget {
+  const Transport({
     required this.state,
     required this.speaker,
     required this.palette,
@@ -385,8 +381,8 @@ class _VolumeSection extends StatelessWidget {
   }
 }
 
-class _ThemePicker extends StatelessWidget {
-  const _ThemePicker({required this.controller});
+class ThemePicker extends StatelessWidget {
+  const ThemePicker({required this.controller});
 
   final ThemeController controller;
 

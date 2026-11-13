@@ -114,10 +114,10 @@ void main() {
     t.dispose();
   });
 
-  testWidgets('wide windows show a sidebar and it switches pages', (
+  testWidgets('wide windows show one dashboard with everything on it', (
     tester,
   ) async {
-    tester.view.physicalSize = const Size(1200, 800);
+    tester.view.physicalSize = const Size(1400, 1200);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     final inner = FakeSpeaker();
@@ -131,16 +131,55 @@ void main() {
         ),
       ),
     );
-    expect(find.byKey(const Key('sidebar')), findsOneWidget);
-    await tester.tap(find.byKey(const Key('tab-tools')));
-    await tester.pump();
+    expect(find.byKey(const Key('tab-tools')), findsNothing);
+    expect(find.byKey(const Key('status')), findsOneWidget);
+    expect(find.byKey(const Key('volume-up')), findsOneWidget);
+    expect(find.byKey(const Key('preset-3')), findsOneWidget);
+    expect(find.byKey(const Key('eq-note')), findsOneWidget);
+    expect(find.byKey(const Key('bands-note')), findsOneWidget);
+    expect(find.byKey(const Key('needs-link')), findsOneWidget);
+    expect(find.byKey(const Key('sleep-30')), findsOneWidget);
+    expect(find.byKey(const Key('cap-off')), findsOneWidget);
     expect(find.byKey(const Key('alarm-switch')), findsOneWidget);
+    expect(find.byKey(const Key('night-switch')), findsOneWidget);
+    expect(find.byKey(const Key('find-card')), findsOneWidget);
+    expect(find.byKey(const Key('megaphone-card')), findsOneWidget);
+    await tester.ensureVisible(find.byKey(const Key('sleep-30')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('sleep-30')));
+    await tester.pump();
+    expect(find.byKey(const Key('sleep-remaining')), findsOneWidget);
+    tools.dispose();
+  });
+
+  testWidgets('a medium window stacks the same dashboard in one column', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(900, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final inner = FakeSpeaker();
+    final tools = ToolsController(inner);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: AppShell(
+          speaker: CappedSpeaker(inner, tools),
+          theme: ThemeController(),
+          tools: tools,
+        ),
+      ),
+    );
+    expect(find.byKey(const Key('volume-up')), findsOneWidget);
+    expect(tester.takeException(), isNull);
     tools.dispose();
   });
 
   testWidgets('tabs switch pages and the sleep timer starts from Tools', (
     tester,
   ) async {
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
     final inner = FakeSpeaker();
     final tools = ToolsController(inner);
     await tester.pumpWidget(

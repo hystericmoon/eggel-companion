@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../link/speaker_link.dart';
 import '../speaker/speaker.dart';
 import '../tools/tools_controller.dart';
+import 'dashboard_page.dart';
 import 'home_page.dart';
 import 'sound_page.dart';
 import 'speaker_page.dart';
@@ -58,93 +59,13 @@ class _AppShellState extends State<AppShell> {
             ),
           ],
         );
-        // Wide windows (desktop) get a sidebar instead of the bottom bar.
+        // Wide windows (desktop) get one dashboard instead of the tabs.
         if (MediaQuery.sizeOf(context).width >= 760) {
-          return Scaffold(
-            backgroundColor: eggelBackground,
-            body: Row(
-              children: [
-                Container(
-                  key: const Key('sidebar'),
-                  width: 200,
-                  decoration: BoxDecoration(
-                    color: eggelBackground,
-                    border: Border(
-                      right: BorderSide(
-                        color: Colors.white.withValues(alpha: 0.08),
-                      ),
-                    ),
-                  ),
-                  child: SafeArea(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const Padding(
-                          padding: EdgeInsets.fromLTRB(20, 20, 20, 16),
-                          child: Text(
-                            'Eggel',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w600,
-                              color: eggelText,
-                            ),
-                          ),
-                        ),
-                        for (var i = 0; i < _items.length; i++)
-                          Semantics(
-                            button: true,
-                            selected: i == _index,
-                            label: _items[i].$2,
-                            child: GestureDetector(
-                              key: Key('tab-${_items[i].$2.toLowerCase()}'),
-                              behavior: HitTestBehavior.opaque,
-                              onTap: () => setState(() => _index = i),
-                              child: Container(
-                                margin: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 2,
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 12,
-                                ),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(14),
-                                  color: i == _index
-                                      ? palette.accent.withValues(alpha: 0.16)
-                                      : null,
-                                ),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      _items[i].$1,
-                                      size: 22,
-                                      color: i == _index
-                                          ? palette.accent
-                                          : eggelMuted,
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Text(
-                                      _items[i].$2,
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: i == _index
-                                            ? palette.accent
-                                            : eggelMuted,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-                Expanded(child: pages),
-              ],
-            ),
+          return DashboardPage(
+            speaker: widget.speaker,
+            theme: widget.theme,
+            tools: widget.tools,
+            link: widget.link,
           );
         }
         return Scaffold(
