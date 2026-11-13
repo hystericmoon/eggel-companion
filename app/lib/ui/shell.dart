@@ -1,3 +1,6 @@
+import 'dart:io' show Platform;
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../link/speaker_link.dart';
@@ -59,8 +62,10 @@ class _AppShellState extends State<AppShell> {
             ),
           ],
         );
-        // Wide windows (desktop) get one dashboard instead of the tabs.
-        if (MediaQuery.sizeOf(context).width >= 760) {
+        // Wide windows (desktop) and phones get the one-screen dashboard
+        // (stacked on a phone); the tab bar stays for narrow desktop windows.
+        final width = MediaQuery.sizeOf(context).width;
+        if (width >= 760 || (!kIsWeb && Platform.isAndroid)) {
           return DashboardPage(
             speaker: widget.speaker,
             theme: widget.theme,

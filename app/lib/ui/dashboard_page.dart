@@ -51,15 +51,21 @@ class DashboardPage extends StatelessWidget {
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 1360),
                       child: LayoutBuilder(
-                        builder: (context, box) => SingleChildScrollView(
-                          padding: const EdgeInsets.fromLTRB(32, 24, 32, 40),
-                          child: _body(
-                            context,
-                            s,
-                            palette,
-                            box.maxWidth >= 1040,
-                          ),
-                        ),
+                        builder: (context, box) {
+                          final compact = box.maxWidth < 600;
+                          return SingleChildScrollView(
+                            padding: compact
+                                ? const EdgeInsets.fromLTRB(16, 16, 16, 32)
+                                : const EdgeInsets.fromLTRB(32, 24, 32, 40),
+                            child: _body(
+                              context,
+                              s,
+                              palette,
+                              box.maxWidth >= 1040,
+                              compact,
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ),
@@ -77,18 +83,21 @@ class DashboardPage extends StatelessWidget {
     SpeakerState s,
     EggelPalette palette,
     bool wide,
+    bool compact,
   ) {
     final l = link;
     final nowPlaying = _NowPlayingCard(
       speaker: speaker,
       state: s,
       palette: palette,
+      compact: compact,
     );
     final volume = _VolumeCard(
       speaker: speaker,
       state: s,
       palette: palette,
       tools: tools,
+      compact: compact,
     );
     final sound = _SoundCard(palette: palette, link: l);
     final speakerCol = Column(
@@ -367,130 +376,146 @@ class _NowPlayingCard extends StatelessWidget {
     required this.speaker,
     required this.state,
     required this.palette,
+    this.compact = false,
   });
 
   final Speaker speaker;
   final SpeakerState state;
   final EggelPalette palette;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
+    final art = compact ? 200.0 : 240.0;
     return GlassCard(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(compact ? 18 : 24),
       radius: 24,
-      child: Row(
-        children: [
-          Container(
-            width: 240,
-            height: 240,
-            clipBehavior: Clip.antiAlias,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [palette.accent, palette.glow2, palette.glow3],
-                stops: const [0, 0.55, 1],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: palette.accent.withValues(alpha: 0.4),
-                  blurRadius: 48,
-                ),
+      child: compact
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(child: _art(art)),
+                const SizedBox(height: 20),
+                _info(),
+              ],
+            )
+          : Row(
+              children: [
+                _art(art),
+                const SizedBox(width: 28),
+                Expanded(child: _info()),
               ],
             ),
-            child: Stack(
-              children: [
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  height: 240 * 0.46,
-                  child: const DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.bottomCenter,
-                        end: Alignment.topCenter,
-                        colors: [Color(0x8C07080C), Color(0x0007080C)],
-                      ),
-                    ),
-                  ),
+    );
+  }
+
+  Widget _art(double art) {
+    return Container(
+      width: art,
+      height: art,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [palette.accent, palette.glow2, palette.glow3],
+          stops: const [0, 0.55, 1],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: palette.accent.withValues(alpha: 0.4),
+            blurRadius: 48,
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: art * 0.46,
+            child: const DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [Color(0x8C07080C), Color(0x0007080C)],
                 ),
-                Positioned(
-                  left: 14,
-                  right: 14,
-                  bottom: 14,
-                  child: Visualizer(
-                    color: Colors.white,
-                    active: state.connected && state.playing,
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
-          const SizedBox(width: 28),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        if (state.playing) ...[
-                          _Tag('Live', color: palette.accent),
-                          const SizedBox(width: 10),
-                        ],
-                        const Flexible(
-                          child: Text(
-                            'Now playing on this computer',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(fontSize: 13, color: eggelMuted),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      state.title.isEmpty ? 'Nothing playing' : state.title,
-                      key: const Key('title'),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontFamily: kHeadingFont,
-                        fontSize: 34,
-                        fontWeight: FontWeight.w700,
-                        color: eggelText,
-                        letterSpacing: -0.7,
-                        height: 1.1,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      state.artist,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 16, color: eggelMuted),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Transport(
-                    state: state,
-                    speaker: speaker,
-                    palette: palette,
-                  ),
-                ),
-              ],
+          Positioned(
+            left: 14,
+            right: 14,
+            bottom: 14,
+            child: Visualizer(
+              color: Colors.white,
+              active: state.connected && state.playing,
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _info() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                if (state.playing) ...[
+                  _Tag('Live', color: palette.accent),
+                  const SizedBox(width: 10),
+                ],
+                Flexible(
+                  child: Text(
+                    compact
+                        ? 'Now playing on this phone'
+                        : 'Now playing on this computer',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 13, color: eggelMuted),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              state.title.isEmpty ? 'Nothing playing' : state.title,
+              key: const Key('title'),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontFamily: kHeadingFont,
+                fontSize: compact ? 28 : 34,
+                fontWeight: FontWeight.w700,
+                color: eggelText,
+                letterSpacing: -0.7,
+                height: 1.1,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              state.artist,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 16, color: eggelMuted),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Transport(state: state, speaker: speaker, palette: palette),
+        ),
+      ],
     );
   }
 }
@@ -501,12 +526,14 @@ class _VolumeCard extends StatelessWidget {
     required this.state,
     required this.palette,
     required this.tools,
+    this.compact = false,
   });
 
   final Speaker speaker;
   final SpeakerState state;
   final EggelPalette palette;
   final ToolsController tools;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -519,80 +546,81 @@ class _VolumeCard extends StatelessWidget {
   Widget _volumeBody(BuildContext context) {
     final on = state.connected;
     final cap = tools.effectiveCap;
+    final ring = VolumeRing(
+      value: state.volume,
+      palette: palette,
+      label: formatPercent(state.volume),
+      pulsing: on && state.playing,
+      size: compact ? 200 : 216,
+    );
+    Widget side(Widget body) => compact
+        ? Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [ring, const SizedBox(height: 20), body],
+          )
+        : Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ring,
+              const SizedBox(width: 24),
+              Flexible(child: body),
+            ],
+          );
     return GlassCard(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(compact ? 18 : 24),
       radius: 24,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          VolumeRing(
-            value: state.volume,
-            palette: palette,
-            label: formatPercent(state.volume),
-            pulsing: on && state.playing,
-            size: 216,
-          ),
-          const SizedBox(width: 24),
-          Flexible(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: side(
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    GlassRoundButton(
-                      key: const Key('volume-down'),
-                      icon: Icons.remove,
-                      tooltip: 'Volume down',
-                      onPressed: on
-                          ? () => speaker.setVolume(
-                              stepPercent(state.volume, up: false),
-                            )
-                          : null,
-                    ),
-                    const SizedBox(width: 12),
-                    GlassRoundButton(
-                      key: const Key('volume-up'),
-                      icon: Icons.add,
-                      tooltip: 'Volume up',
-                      onPressed: on
-                          ? () => speaker.setVolume(
-                              stepPercent(state.volume, up: true),
-                            )
-                          : null,
-                    ),
-                  ],
+                GlassRoundButton(
+                  key: const Key('volume-down'),
+                  icon: Icons.remove,
+                  tooltip: 'Volume down',
+                  onPressed: on
+                      ? () => speaker.setVolume(
+                          stepPercent(state.volume, up: false),
+                        )
+                      : null,
                 ),
-                const SizedBox(height: 14),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    if (outputLabel(state.name).isNotEmpty)
-                      _Tag(
-                        '${outputLabel(state.name)} output',
-                        color: eggelMuted,
-                      ),
-                    _Tag(
-                      cap == null ? 'No cap' : 'Cap $cap',
-                      color: palette.accent,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  '1 is just audible. Below the speaker\'s own lowest step the app quiets other apps instead.',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: eggelMuted,
-                    height: 1.4,
-                  ),
+                const SizedBox(width: 12),
+                GlassRoundButton(
+                  key: const Key('volume-up'),
+                  icon: Icons.add,
+                  tooltip: 'Volume up',
+                  onPressed: on
+                      ? () => speaker.setVolume(
+                          stepPercent(state.volume, up: true),
+                        )
+                      : null,
                 ),
               ],
             ),
-          ),
-        ],
+            const SizedBox(height: 14),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                if (outputLabel(state.name).isNotEmpty)
+                  _Tag('${outputLabel(state.name)} output', color: eggelMuted),
+                _Tag(
+                  cap == null ? 'No cap' : 'Cap $cap',
+                  color: palette.accent,
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              '1 is just audible. Below the speaker\'s own lowest step the app quiets other apps instead.',
+              style: TextStyle(fontSize: 13, color: eggelMuted, height: 1.4),
+            ),
+          ],
+        ),
       ),
     );
   }
