@@ -15,6 +15,7 @@ import time
 from pathlib import Path
 
 from bleak import BleakClient, BleakScanner
+from bleak.exc import BleakError
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 HERE = Path(__file__).parent
@@ -227,6 +228,8 @@ async def main():
 
         # 3. ask for the status; log everything that comes back
         await send(3)
+        await asyncio.sleep(1)
+        await send(0x60)  # refresh request the phone uses; answered by a full 0x8006 report
         log("listening for datapoints for 10 s...")
         end = time.time() + 10
         while time.time() < end:
@@ -244,5 +247,17 @@ async def main():
     return 0
 
 
+async def main_retry():
+    # Windows often reports "Unreachable" on a reconnect right after a previous
+    # session; waiting and trying again usually works.
+    for attempt in range(1, 6):
+        try:
+            return await main()
+        except BleakError as ex:
+            log(f"attempt {attempt} failed: {ex}")
+            await asyncio.sleep(6)
+    return 1
+
+
 if __name__ == "__main__":
-    sys.exit(asyncio.run(main()))
+    sys.exit(asyncio.run(main_retry()))

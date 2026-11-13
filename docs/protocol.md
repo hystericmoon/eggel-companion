@@ -87,3 +87,4 @@ Datapoints (code 0x0027 write, 0x8006 report; dp = id, type, 2-byte length, valu
 - dp 27 (0x1b) value = battery % (100 seen)
 - dp 2 (0x02) bool and dp 29 (0x1d) bool: toggled during the TWS/other taps, meaning unconfirmed
 - code 0x0060 (empty) is sent by the app now and then: reply is a full 0x8006 report (a refresh).
+- Handshake confirmed (2026-11-13, probe_tuya.py with the phone's frames): device info reply (protocol 4.4, bound=1), pair reply `02`, status answers 0x8011 and 0x0003. Reconnecting right after a session fails with "Unreachable" on start_notify until the speaker is power-cycled (it works on the first connect after a power-cycle or radio toggle). The probe also sends 0x0060 to get the full 0x8006 datapoint report (not yet seen live).
