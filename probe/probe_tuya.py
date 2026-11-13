@@ -158,12 +158,14 @@ class Session:
 
 
 def parse_dps(body):
-    out, pos = [], 0
-    while pos + 3 <= len(body):
-        dp, typ, ln = body[pos], body[pos + 1], body[pos + 2]
-        val = body[pos + 3 : pos + 3 + ln]
-        pos += 3 + ln
-        out.append((dp, typ, val))
+    """Report layout (protocol 4): 5-byte header, 2 flag bytes, then
+    datapoints of id, type, 2-byte length, value."""
+    out, pos = [], 7
+    while pos + 4 <= len(body):
+        dp, typ = body[pos], body[pos + 1]
+        ln = int.from_bytes(body[pos + 2 : pos + 4], "big")
+        out.append((dp, typ, body[pos + 4 : pos + 4 + ln]))
+        pos += 4 + ln
     return out
 
 
