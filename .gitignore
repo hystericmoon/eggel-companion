@@ -17,3 +17,4 @@ __pycache__/
 # Tuya cloud credentials (never commit)
 probe/tuya.env
 probe/tuya-log.txt
+probe/cap2/

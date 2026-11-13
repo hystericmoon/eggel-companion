@@ -92,6 +92,7 @@ class Session:
         self.session_key = None
         self.seq = 1
         self.proto = 2
+        self.mtu = MTU
         self.buf = bytearray()
         self.expect = 0
         self.inbox = asyncio.Queue()
@@ -119,7 +120,7 @@ class Session:
             if n == 0:
                 p += pack_int(len(enc))
                 p.append(self.proto << 4)
-            part = enc[pos : pos + MTU - len(p)]
+            part = enc[pos : pos + self.mtu - len(p)]
             p += part
             packets.append(bytes(p))
             pos += len(part)
@@ -184,6 +185,8 @@ async def main():
     log(f"found {dev.name} {dev.address}")
     s = Session(env)
     async with BleakClient(dev) as client:
+        s.mtu = max(MTU, client.mtu_size - 3)
+        log(f"mtu {client.mtu_size}, packet size {s.mtu}")
         await client.start_notify(NOTIFY, s.on_notify)
         for extra in ("0000ab02-0000-1000-8000-00805f9b34fb", "0000ab03-0000-1000-8000-00805f9b34fb"):
             try:
@@ -208,7 +211,7 @@ async def main():
             return await asyncio.wait_for(s.inbox.get(), timeout)
 
         # 1. device info (login key)
-        await send(0)
+        await send(0, client.mtu_size.to_bytes(2, "big"))  # the phone sends its MTU (00f3) here
         r = await expect()
         log(f"reply code={r[0]} crc_ok={r[-1]}")
         info = r[3]
@@ -217,7 +220,7 @@ async def main():
         s.session_key = hashlib.md5(s.local_key + info[6:12]).digest()
 
         # 2. pair / authenticate with the session key
-        pair = (s.uuid + s.local_key + s.device_id).ljust(44, b"\x00")
+        pair = (s.uuid + s.local_key + s.device_id).ljust(44, b"\x00") + b"\x00\x01"  # phone sends 46 bytes
         await send(1, pair)
         r = await expect()
         log(f"pair reply code={r[0]} data={r[3].hex()} crc_ok={r[-1]}")
