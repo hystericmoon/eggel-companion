@@ -70,3 +70,7 @@ None decoded yet.
 - `probe/probe_tuya.py` sends the Tuya BLE device-info request (frame: seq varint, length varint, protocol 2, then flag 4, 16-byte IV, AES-CBC of seq/response-to/code/length/data/CRC16, key = md5 of the first 6 local-key characters). The frame layout and UUIDs match the official SDK's.
 - Result: the speaker accepts the writes but sends no notification on 0xFD50 (also subscribed to AB02/AB03). Reading 0xFD50 char 00000003 returns empty. The SDK reads that characteristic first; its code also checks `isPaired`, so the speaker may only answer on a bonded link.
 - Open: get a BLE bond from Windows, or capture the phone's traffic.
+
+## BLE bonding attempt (2026-11-13)
+- `probe/probe_ble_bond.py` (WinRT custom pairing, ConfirmOnly, no GATT writes) bonds the BLE side from Windows: first attempt returned Paired, `is_paired` is True afterwards (address type 1 = random). bleak's own `pair()` had failed.
+- After bonding, `probe_tuya.py` fails earlier than before: `start_notify` on 0xFD50 raises "operation cancelled" then "Unreachable". The Tuya handshake has not been retried successfully on the bonded link. Next: power-cycle the speaker, retry; if still unreachable, unpair (`probe_ble_bond.py unpair`) and compare.
